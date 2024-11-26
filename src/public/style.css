@@ -1,3 +1,161 @@
+*,
+*::before,
+*::after {
+    padding: 0;
+    border: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
 body {
-    background-color: lime;
+    background-color: #efefef;
+}
+
+main {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background-color: chocolate;
+}
+
+
+.file-uploader {
+    width: 500px;
+    background-color: #fff;
+    border-radius: 5px;
+}
+
+.uploader-header {
+    display: flex;
+    padding: 1.2rem;
+    background-color: #eef1fb;
+    align-items: center;
+    justify-content: space-between;
+    border-radius: 5px 5px 0 0;
+}
+
+.uploader-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.file-completed-status {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #333;
+}
+
+.file-list {
+    list-style-type: none;
+    width: 100%;
+    padding: 20px;
+    max-height: 350px;
+    overflow-y: auto;
+    scrollbar-color: #999 transparent;
+    scrollbar-width: thin;
+}
+
+.file-item {
+    display: flex;
+    gap: 0.9rem;
+    margin-bottom: 22px;
+}
+
+
+.file-extension {
+    height: 50px;
+    width: 50px;
+    color: white;
+    background-color: purple;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 5px;
+}
+
+.file-content-wrapper {
+    flex: 1;
+}
+
+.file-content {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+}
+
+.file-name {
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.file-info {
+    display: flex;
+    gap: 5px;
+}
+
+.file-status {
+    color: lime;
+}
+
+.file-info small {
+    color: #5c5c5c;
+    margin-top: 5px;
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.cancel-button {
+    align-self: center;
+    border: none;
+    outline: none;
+    background-color: transparent;
+    cursor: pointer;
+    font-size: 1.4rem;
+}
+
+.cancel-button:hover {
+    color: red;
+}
+
+
+.file-progress-bar {
+    width: 100%;
+    height: 3px;
+    margin-top: 10px;
+    border-radius: 30px;
+    background-color: #d9d9d9;
+}
+
+.file-progress {
+    width: 50%;
+    height: inherit;
+    border-radius: inherit;
+    background-color: greenyellow;
+}
+
+.file-upload-box {
+    margin: 10px 20px 20px;
+    border-radius: 5px;
+    min-height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px dashed #b1add4;
+}
+
+.box-title {
+    font-size: 1.05rem;
+    font-weight: 500;
+    color: #626161;
+}
+
+.file-browse-button {
+    color: #5145ba;
+    cursor: pointer;
+}
+
+.file-browse-button:hover {
+    text-decoration: underline;
 }

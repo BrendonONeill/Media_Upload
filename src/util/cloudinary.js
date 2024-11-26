@@ -6,4 +6,9 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET
 })
 
+cloudinary.api.resources({
+    type: 'upload',
+    prefix: 'Wedding'
+},function(error, result) { console.log(result, error) });
+
 export default cloudinary
