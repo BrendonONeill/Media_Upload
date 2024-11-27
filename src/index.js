@@ -13,7 +13,7 @@ app.use(express.static(__dirname + '/public'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.post("/test", upload.array('data', 20), (req, res) => {
+app.post("/test", upload.array('files', 20), (req, res) => {
     req.files.forEach(element => {
         cloudinary.uploader.upload(element.path, {folder: "Wedding"}, function (err,result){
             if(err)

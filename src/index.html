@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Kirsty & Niall</title>
     <link rel="stylesheet" href="/style.css">
     <script defer async src="/main.js"></script>
 </head>
@@ -14,117 +14,33 @@
     <p>We would patriate that you upload any photos or video of the wedding.</p>
 
     <main>
-        <div class="file-uploader">
-            <div class="uploader-header">
-                <h2 class="uploder-title">FILE UPLOAD</h2>
-                <h4 class="file-completed-status">0/4 Files Completed</h4>
+        <form method="post" enctype="multipart/form-data">
+
+
+            <div class="file-uploader">
+                <div class="uploader-header">
+                    <h2 class="uploder-title">FILE UPLOAD</h2>
+                    <h4 class="file-completed-status">0 Files</h4>
+                </div>
+                <ul class="file-list">
+
+                </ul>
+                <div class="file-upload-box">
+                    <h2 class="box-title">
+                        <span class="file-instructions">Drag file here or</span>
+                        <span class="file-browser-button">browse</span>
+                    </h2>
+                    <input type="file" class="file-browser-input" accept="image/* video/*" required multiple id="data"
+                        name="files" hidden>
+                </div>
             </div>
-            <ul class="file-list">
-                <li class="file-item">
-                    <div class="file-extension">JPG</div>
-                    <div class="file-content-wrapper">
-                        <div class="file-content">
-                            <div class="file-details">
-                                <small class="file-name">Image.jpg</small>
-                                <small class="file-size">0mb /3.4mb</small>
-                                <small class="file-divider">.</small>
-                                <small class="file-status">Uploading...</small>
-                            </div>
-                            <button class="cancel-button">x</button>
-                        </div>
-                        <div class="file-progress-bar">
-                            <div class="file-progress"></div>
-                        </div>
-                    </div>
-                </li>
 
-                <li class="file-item">
-                    <div class="file-extension">JPG</div>
-                    <div class="file-content-wrapper">
-                        <div class="file-content">
-                            <div class="file-details">
-                                <small class="file-name">Image.jpg</small>
-                                <small class="file-size">0mb /3.4mb</small>
-                                <small class="file-divider">.</small>
-                                <small class="file-status">Uploading...</small>
-                            </div>
-                            <button class="cancel-button">x</button>
-                        </div>
-                        <div class="file-progress-bar">
-                            <div class="file-progress"></div>
-                        </div>
-                    </div>
-                </li>
-
-                <li class="file-item">
-                    <div class="file-extension">JPG</div>
-                    <div class="file-content-wrapper">
-                        <div class="file-content">
-                            <div class="file-details">
-                                <small class="file-name">Image.jpg</small>
-                                <small class="file-size">0mb /3.4mb</small>
-                                <small class="file-divider">.</small>
-                                <small class="file-status">Uploading...</small>
-                            </div>
-                            <button class="cancel-button">x</button>
-                        </div>
-                        <div class="file-progress-bar">
-                            <div class="file-progress"></div>
-                        </div>
-                    </div>
-                </li>
-
-                <li class="file-item">
-                    <div class="file-extension">JPG</div>
-                    <div class="file-content-wrapper">
-                        <div class="file-content">
-                            <div class="file-details">
-                                <small class="file-name">Image.jpg</small>
-                                <small class="file-size">0mb /3.4mb</small>
-                                <small class="file-divider">.</small>
-                                <small class="file-status">Uploading...</small>
-                            </div>
-                            <button class="cancel-button">x</button>
-                        </div>
-                        <div class="file-progress-bar">
-                            <div class="file-progress"></div>
-                        </div>
-                    </div>
-                </li>
-
-                <li class="file-item">
-                    <div class="file-extension">JPG</div>
-                    <div class="file-content-wrapper">
-                        <div class="file-content">
-                            <div class="file-details">
-                                <small class="file-name">Image.jpg</small>
-                                <small class="file-size">0mb /3.4mb</small>
-                                <small class="file-divider">.</small>
-                                <small class="file-status">Uploading...</small>
-                            </div>
-                            <button class="cancel-button">x</button>
-                        </div>
-                        <div class="file-progress-bar">
-                            <div class="file-progress"></div>
-                        </div>
-                    </div>
-                </li>
-            </ul>
-            <div class="file-upload-box">
-                <h2 class="box-title">
-                    <span class="file-instructions">Drag file here or</span>
-                    <span class="file-browser-button">browse</span>
-                </h2>
-                <input type="file" class="file-browser-input" multiple hidden>
-            </div>
-        </div>
+            <label for="passkey"><input type="text" id="passkey" required name="passkey"> Passkey</label>
+            <input type="submit" id="form-submit" value="upload">
+        </form>
     </main>
 
-    <form action="http://localhost:3000/test" method="post" enctype="multipart/form-data">
-        <label for="passkey"><input type="text" required name="passkey"> Passkey</label>
-        <input type="file" accept="image/* video/*" required multiple id="data" name="data">
-        <input type="submit" value="upload">
-    </form>
+
 </body>
 
 </html>

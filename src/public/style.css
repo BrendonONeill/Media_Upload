@@ -15,8 +15,8 @@ main {
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 100vh;
-    background-color: chocolate;
+    min-height: 50vh;
+    background-color: palegoldenrod;
 }
 
 
@@ -51,6 +51,7 @@ main {
     width: 100%;
     padding: 20px;
     max-height: 350px;
+    min-height: 350px;
     overflow-y: auto;
     scrollbar-color: #999 transparent;
     scrollbar-width: thin;
@@ -66,8 +67,6 @@ main {
 .file-extension {
     height: 50px;
     width: 50px;
-    color: white;
-    background-color: purple;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -136,13 +135,14 @@ main {
 }
 
 .file-upload-box {
-    margin: 10px 20px 20px;
+    margin: 20px;
     border-radius: 5px;
     min-height: 100px;
     display: flex;
     align-items: center;
     justify-content: center;
     border: 2px dashed #b1add4;
+    transition: all 0.2s ease;
 }
 
 .box-title {
@@ -151,11 +151,17 @@ main {
     color: #626161;
 }
 
-.file-browse-button {
+.file-browser-button {
     color: #5145ba;
     cursor: pointer;
 }
 
-.file-browse-button:hover {
+.file-browser-button:hover {
     text-decoration: underline;
+}
+
+
+.active {
+    border: 2px solid #5145ba;
+    background-color: #f3f6ff;
 }
