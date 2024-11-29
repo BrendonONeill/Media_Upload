@@ -5,11 +5,10 @@ const filesCount = document.querySelector(".file-completed-status")
 const filesList = document.querySelector(".file-list")
 let formSubmit = document.querySelector("#form-submit")
 const passkey = document.querySelector("#passkey")
+const notify = document.querySelector(".notify")
+const notifyText = document.querySelector(".update")
 
 let photos = []
-
-
-
 
 const handleFiles = ([...files] = []) =>
 {
@@ -62,19 +61,31 @@ function generateListItem(file, num)
     <div class="file-content-wrapper">
         <div class="file-content">
             <div class="file-details">
-                <small class="file-name">${file.name}</small>
-                <small class="file-size">${file.size}</small>
-                <small class="file-divider">.</small>
+                <small class="file-name">${file.name}</small>    
             </div>
             <button class="cancel-button" id=photoId-${num}>x</button>
         </div>
         <div class="file-progress-bar">
-            <div class="file-progress"></div>
+            <small class="file-size">${fileSize(file.size)}</small>
         </div>
     </div>`
     li.classList.add("file-item")
     li.id = `${num}`
     return li
+}
+
+function fileSize(bytes)
+{
+    if(bytes > 1048576)
+    {
+        let num = bytes/1048576
+        return num.toFixed(2)  + "MB"
+    }
+    else
+    {
+        let num =  bytes/1024
+        return num.toFixed(2) + "KB"
+    }
 }
 
 function createThumbnail(file)
@@ -141,8 +152,19 @@ formSubmit.addEventListener("click", (e) => {
 
 async function postingData(formData)
 {
-    let res = await fetch("http://localhost:3000/test",{ method: "POST",body: formData})
-    console.log("res")
+    console.log(passkey.value)
+    let res = await fetch("http://localhost:3000/test",{ method: "POST",body: formData, headers: {Authorization: `Bearer ${passkey.value}`}})
+    if(!res.ok)
+    {
+        console.log("there was an Error")
+        return
+    }
+    let data = await res.json()
+
+    console.log("data sent")
+    console.log(data.data)
+    notifyText.textContent = data.message
+    
 }
 
 
