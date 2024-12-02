@@ -193,6 +193,7 @@ form {
     background-color: #f3f6ff;
 }
 
+
 .notify {
     background-color: lime;
     width: 320px;
@@ -206,6 +207,9 @@ form {
     align-items: center;
 }
 
+.notify-hide {
+    display: none;
+}
 
 .passkey-label {
     padding: 1rem;

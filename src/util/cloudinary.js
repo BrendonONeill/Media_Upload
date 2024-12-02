@@ -9,6 +9,6 @@ cloudinary.config({
 cloudinary.api.resources({
     type: 'upload',
     prefix: 'Wedding'
-},function(error, result) { console.log(result, error) });
+},function(error, result) { console.log("") });
 
 export default cloudinary

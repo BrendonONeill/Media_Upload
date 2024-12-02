@@ -160,11 +160,26 @@ async function postingData(formData)
         return
     }
     let data = await res.json()
-
-    console.log("data sent")
-    console.log(data.data)
+    removeFromList(data.data.data)
+    notify.classList.remove("notify-hide")
     notifyText.textContent = data.message
+    setTimeout(() => {
+        notify.classList.add("notify-hide")
+    },10000)
     
+}
+
+function removeFromList(data)
+{
+    const a = filesList.querySelectorAll("li")
+    a.forEach((item) => {
+        let test = item.querySelector(".file-name")
+        if(data.includes(test.textContent))
+        {
+            item.remove()
+        }
+    })
+    console.log(data)
 }
 
 
