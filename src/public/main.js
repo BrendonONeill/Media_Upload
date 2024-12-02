@@ -7,6 +7,7 @@ let formSubmit = document.querySelector("#form-submit")
 const passkey = document.querySelector("#passkey")
 const notify = document.querySelector(".notify")
 const notifyText = document.querySelector(".update")
+const loadingBG = document.querySelector(".loading-bg")
 
 let photos = []
 
@@ -152,29 +153,31 @@ formSubmit.addEventListener("click", (e) => {
 
 async function postingData(formData)
 {
-    console.log(passkey.value)
-    let res = await fetch("http://localhost:3000/test",{ method: "POST",body: formData, headers: {Authorization: `Bearer ${passkey.value}`}})
+    loadingBG.classList.remove("notify-hide")
+    let res = await fetch("http://localhost:3000/uploadmedia",{ method: "POST",body: formData, headers: {Authorization: `Bearer ${passkey.value}`}})
     if(!res.ok)
     {
         console.log("there was an Error")
+        loadingBG.classList.add("notify-hide");
         return
     }
-    let data = await res.json()
-    removeFromList(data.data.data)
+    let obj = await res.json()
+    removeFromList(obj.data.photosUploaded)
     notify.classList.remove("notify-hide")
+    loadingBG.classList.add("notify-hide");
     notifyText.textContent = data.message
     setTimeout(() => {
-        notify.classList.add("notify-hide")
+        notify.classList.add("notify-hide");
     },10000)
     
 }
 
 function removeFromList(data)
 {
-    const a = filesList.querySelectorAll("li")
-    a.forEach((item) => {
-        let test = item.querySelector(".file-name")
-        if(data.includes(test.textContent))
+    const listItems = filesList.querySelectorAll("li")
+    listItems.forEach((item) => {
+        let itemText = item.querySelector(".file-name")
+        if(data.includes(itemText.textContent))
         {
             item.remove()
         }

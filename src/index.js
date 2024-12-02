@@ -13,7 +13,7 @@ app.use(express.static(__dirname + '/public'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.post("/test", upload.array('files', 20), async (req, res) => {
+app.post("/uploadmedia", upload.array('files', 20), async (req, res) => {
     
     let token  = req.headers.authorization.slice(7,)
 
@@ -23,7 +23,7 @@ app.post("/test", upload.array('files', 20), async (req, res) => {
 
     if(acceptedPasskey)
     {
-        const info = {data: [], dataCount: 0, error: []}
+        const info = {photosUploaded: [], photoCount: 0, error: []}
        
         const uploadPromises = req.files.map( async (element) => {
             try {
@@ -49,11 +49,11 @@ app.post("/test", upload.array('files', 20), async (req, res) => {
         console.log("returned info: ", uploadedFiles)
 
         for (let i = 0; i < uploadedFiles.length; i++) {
-            info.data.push(uploadedFiles[i].data);
-            info.dataCount =+ 1
+            info.photosUploaded.push(uploadedFiles[i].data);
+            info.photoCount =+ 1
         }
         
-        res.status(200).json({message: `${info.dataCount} Files were successfully uploaded`, data: info})
+        res.status(200).json({message: `${info.photoCount} Files were successfully uploaded`, data: info})
     }
     else
     {
