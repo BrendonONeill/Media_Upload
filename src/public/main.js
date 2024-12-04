@@ -200,6 +200,7 @@ function removeFromList(data)
             item.remove()
         }
     })
+    
     console.log(data)
 }
 
