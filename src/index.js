@@ -57,7 +57,7 @@ app.post("/uploadmedia", upload.array('files', 20), async (req, res) => {
     }
     else
     {
-        res.status(401).json({error:"access was denied"})
+        res.status(401).json({error:"access was denied",message: "Passkey was incorrect, Please try again."})
     }
 })
 

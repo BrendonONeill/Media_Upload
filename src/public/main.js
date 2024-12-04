@@ -13,37 +13,28 @@ let photos = []
 
 const handleFiles = ([...files] = []) =>
 {
-    console.log("called")
-    console.log("photos",photos)
     if(photos.length <= 0)
     {
-        console.log("no photos")
         photos = [...photos, ...files]
     }
     else
     {
         if(files.length > 0)
         {
-            console.log("we have files")
             photos = filterFiles(files, photos)
         }
         
     }
-
     if(photos.length == 0) return
-    
     filesCount.textContent = `${photos.length} files`
     document.querySelector(".file-list").innerHTML = ""
     for (let i = 0; i < photos.length; i++)
     {
         let img = createThumbnail(photos[i])
         let item = generateListItem(photos[i], i)
-        item.querySelector(".file-extension").append(img)
+        item.querySelector(".file-image").append(img)
         document.querySelector(".file-list").append(item)
     } 
-
-
-
 }
 
 function filterFiles(files, photos)
@@ -58,18 +49,17 @@ function filterFiles(files, photos)
 function generateListItem(file, num)
 {
     const li = document.createElement("li");
-    li.innerHTML = `<div class="file-extension"></div>
-    <div class="file-content-wrapper">
-        <div class="file-content">
-            <div class="file-details">
-                <small class="file-name">${file.name}</small>    
-            </div>
-            <button class="cancel-button" id=photoId-${num}>x</button>
+    li.innerHTML = `
+        <div class="file-image"></div>
+        <div class="file-details">
+            <small class="file-name">${file.name}</small>
         </div>
-        <div class="file-progress-bar">
+        <div class="cancel-button-container">
+            <button class="cancel-button" id="photoId-${num}">x</button>
+        </div>
+        <div class="file-size-container">
             <small class="file-size">${fileSize(file.size)}</small>
-        </div>
-    </div>`
+        </div>`
     li.classList.add("file-item")
     li.id = `${num}`
     return li
@@ -117,8 +107,7 @@ filesList.addEventListener("click", (e) => {
 
 fileUploadBox.addEventListener("drop", (e) => {
     e.preventDefault()
-    handleFiles(e.dataTransfer.files)
-    
+    handleFiles(e.dataTransfer.files) 
     fileUploadBox.classList.add("active")
     fileUploadBox.querySelector(".file-instructions").textContent = "Drop to upload"
 })
@@ -136,19 +125,37 @@ fileUploadBox.addEventListener("dragleave", (e) => {
      fileUploadBox.querySelector(".file-instructions").textContent = "Drag file here or"
 })
 
+
 formSubmit.addEventListener("click", (e) => {
     e.preventDefault()
     let formData = new FormData();
-    formData.append("passkey",passkey.value)
-    photos.forEach((file) => formData.append("files", file));
-
-    for (const pair of formData.entries()) {
-        console.log(pair[0], pair[1]);
-      }
-
-    postingData(formData)
-
-
+    if(photos.length == 0)
+    {
+        notify.classList.remove("notify-hide")
+        notifyText.textContent = "No Files were added."
+        notify.style.background = "red"
+        notify.style.color = "white"
+        setTimeout(() => {
+            notify.classList.add("notify-hide");
+        },5000)
+        return
+    }
+    if(passkey.value != "")
+    {
+        formData.append("passkey",passkey.value)
+        photos.forEach((file) => formData.append("files", file));
+        postingData(formData)
+    }
+    else
+    {
+        notify.classList.remove("notify-hide")
+        notifyText.textContent = "Passkey wasn't given."
+        notify.style.background = "red"
+        notify.style.color = "white"
+        setTimeout(() => {
+            notify.classList.add("notify-hide");
+        },5000)
+    }    
 })
 
 async function postingData(formData)
@@ -157,18 +164,29 @@ async function postingData(formData)
     let res = await fetch("http://localhost:3000/uploadmedia",{ method: "POST",body: formData, headers: {Authorization: `Bearer ${passkey.value}`}})
     if(!res.ok)
     {
+        let obj = await res.json()
         console.log("there was an Error")
+        notify.classList.remove("notify-hide")
         loadingBG.classList.add("notify-hide");
+        notifyText.textContent = obj.message
+        notify.style.background = "red"
+        notify.style.color = "white"
+        setTimeout(() => {
+            notify.classList.add("notify-hide");
+        },5000)
         return
     }
     let obj = await res.json()
+    console.log(obj)
     removeFromList(obj.data.photosUploaded)
     notify.classList.remove("notify-hide")
     loadingBG.classList.add("notify-hide");
-    notifyText.textContent = data.message
+    notify.style.background = "#88e788"
+    notify.style.color = "black"
+    notifyText.textContent = obj.message
     setTimeout(() => {
         notify.classList.add("notify-hide");
-    },10000)
+    },5000)
     
 }
 

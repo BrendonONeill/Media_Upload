@@ -5,8 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kirsty & Niall</title>
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="/style.css">
-    <script defer async src="/main.js"></script>
+    <script defer src="/main.js"></script>
 </head>
 
 <body>
@@ -22,7 +23,8 @@
         <p class="update">Sorry there was an error.</p>
     </div>
     <div class="information">
-        <p>We would patriate that you upload any photos or video of the wedding.</p>
+        <p>We would love if you would upload any photos of the wedding. If you are on PC just drag and drop your file's
+            on dotted line box or click the browse button and select the files to upload</p>
     </div>
 
     <main>
@@ -35,19 +37,18 @@
                     <h4 class="file-completed-status">0 Files</h4>
                 </div>
                 <ul class="file-list">
-
                 </ul>
                 <div class="file-upload-box">
                     <h2 class="box-title">
                         <span class="file-instructions">Drag file here or</span>
                         <span class="file-browser-button">browse</span>
                     </h2>
-                    <input type="file" class="file-browser-input" accept="image/* video/*" required multiple id="data"
+                    <input type="file" class="file-browser-input" accept="image/*" required multiple id="data"
                         name="files" hidden>
                 </div>
             </div>
 
-            <label class="passkey-label" for="passkey">Passkey <input type="text" class="passkey" id="passkey" required
+            <label class="passkey-label" for="passkey">Passkey: <input type="text" class="passkey" id="passkey" required
                     name="passkey"></label>
             <input class="upload" type="submit" id="form-submit" value="upload">
         </form>
