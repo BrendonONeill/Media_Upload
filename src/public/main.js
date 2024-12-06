@@ -26,7 +26,8 @@ const handleFiles = ([...files] = []) =>
         
     }
     if(photos.length == 0) return
-    filesCount.textContent = `${photos.length} files`
+    filesCount.textContent = `${photos.length}/20 files`
+    console.log(photos[0].name)
     document.querySelector(".file-list").innerHTML = ""
     for (let i = 0; i < photos.length; i++)
     {
@@ -133,8 +134,8 @@ formSubmit.addEventListener("click", (e) => {
     {
         notify.classList.remove("notify-hide")
         notifyText.textContent = "No Files were added."
-        notify.style.background = "red"
-        notify.style.color = "white"
+        notify.style.background = "#FBEFEB"
+        notify.style.border = "2px solid #FC5758"
         setTimeout(() => {
             notify.classList.add("notify-hide");
         },5000)
@@ -150,8 +151,8 @@ formSubmit.addEventListener("click", (e) => {
     {
         notify.classList.remove("notify-hide")
         notifyText.textContent = "Passkey wasn't given."
-        notify.style.background = "red"
-        notify.style.color = "white"
+        notify.style.background = "#FBEFEB"
+        notify.style.border = "2px solid #FC5758"
         setTimeout(() => {
             notify.classList.add("notify-hide");
         },5000)
@@ -169,8 +170,9 @@ async function postingData(formData)
         notify.classList.remove("notify-hide")
         loadingBG.classList.add("notify-hide");
         notifyText.textContent = obj.message
-        notify.style.background = "red"
-        notify.style.color = "white"
+        notify.style.background = "#FBEFEB"
+        notify.style.border = "2px solid #FC5758"
+        
         setTimeout(() => {
             notify.classList.add("notify-hide");
         },5000)
@@ -181,8 +183,8 @@ async function postingData(formData)
     removeFromList(obj.data.photosUploaded)
     notify.classList.remove("notify-hide")
     loadingBG.classList.add("notify-hide");
-    notify.style.background = "#88e788"
-    notify.style.color = "black"
+    notify.style.background = "#F1F8F4"
+    notify.style.border = "2px solid #50dc6c"
     notifyText.textContent = obj.message
     setTimeout(() => {
         notify.classList.add("notify-hide");
@@ -200,8 +202,26 @@ function removeFromList(data)
             item.remove()
         }
     })
+    photos = filterPhotos(data, photos)
+    filesCount.textContent = `${photos.length}/20 files`
+}
+
+function filterPhotos(data, photos)
+{
+    for(let i = 0; i < data.length; i++)
+    {
+        for(let j = 0; j < photos.length; j++)
+        {
+            if(data[i] == photos[j].name)
+            {
+                photos[j] = null
+                break
+            }
+        }
+    }
+
+    return photos.filter(photo => photo !== null)
     
-    console.log(data)
 }
 
 
