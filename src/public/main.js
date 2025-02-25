@@ -1,42 +1,96 @@
-const fileBrowserButton = document.querySelector(".file-browser-button")
-const fileBrowserInput = document.querySelector(".file-browser-input")
-const fileUploadBox = document.querySelector(".file-upload-box")
-const filesCount = document.querySelector(".file-completed-status")
-const filesList = document.querySelector(".file-list")
-let formSubmit = document.querySelector("#form-submit")
-const passkey = document.querySelector("#passkey")
-const notify = document.querySelector(".notify")
-const notifyText = document.querySelector(".update")
-const loadingBG = document.querySelector(".loading-bg")
+const fileBrowserButton = document.querySelector(".file-browser-button");
+const fileBrowserInput = document.querySelector(".file-browser-input");
+const fileUploadBox = document.querySelector(".file-upload-box");
+const filesCount = document.querySelector(".file-completed-status");
+const filesList = document.querySelector(".file-list");
+let formSubmit = document.querySelector("#form-submit");
+const passkey = document.querySelector("#passkey");
+const notify = document.querySelector(".notify");
+const notifyText = document.querySelector(".update");
+const loadingBG = document.querySelector(".loading-bg");
 
+// array of media
+let media = [];
 let photos = []
+
+//when
+fileBrowserInput.addEventListener("change", (e) => handleFiles(e.target.files))
+fileBrowserButton.addEventListener("click", () => fileBrowserInput.click())
 
 const handleFiles = ([...files] = []) =>
 {
-    if(photos.length <= 0)
+
+
+    for(let i = 0; i < files.length; i++)
     {
-        photos = [...photos, ...files]
-    }
-    else
-    {
-        if(files.length > 0)
+        if(files[i].type.startsWith("image"))
         {
-            photos = filterFiles(files, photos)
+            media.push(files[i])
         }
-        
+        if(files[i].type.startsWith("video"))
+        {
+            let test = videoObjectCreator(files[i])
+            media.push(test)
+        }
     }
-    if(photos.length == 0) return
-    filesCount.textContent = `${photos.length}/20 files`
-    console.log(photos[0].name)
-    document.querySelector(".file-list").innerHTML = ""
-    for (let i = 0; i < photos.length; i++)
-    {
-        let img = createThumbnail(photos[i])
-        let item = generateListItem(photos[i], i)
-        item.querySelector(".file-image").append(img)
-        document.querySelector(".file-list").append(item)
-    } 
+    console.log(media)
+
+    return
+
+
+        if(photos.length <= 0)
+        {
+            photos = [...photos, ...files]
+        }
+        else
+        {
+            if(files.length > 0)
+            {
+                photos = filterFiles(files, photos)
+            }
+            
+        }
+        if(photos.length == 0) return
+        filesCount.textContent = `${photos.length}/20 files`
+        console.log(photos)
+        document.querySelector(".file-list").innerHTML = ""
+        for (let i = 0; i < photos.length; i++)
+        {
+            let img = createThumbnail(photos[i])
+            let item = generateListItem(photos[i], i)
+            item.querySelector(".file-image").append(img)
+            document.querySelector(".file-list").append(item)
+        } 
 }
+
+
+
+function videoObjectCreator(file)
+{
+    let videoChunks = []
+    let start = 0
+    let chunkSize = (1024 * 1024) * 8
+    let end = file.size
+    let id = 0
+    console.log(file, end, start, typeof(file))
+    while(start < end)
+     {
+          id += 1
+          let chunkEnd = start + chunkSize
+          if(chunkEnd > end)
+          {
+              chunkEnd = end
+          }
+          let chunk = new File([file.slice(start,(chunkEnd))],file.name,{type: file.type, test: "yes"})
+          videoChunks.push(chunk)
+          
+          start = start + chunkSize
+     }
+    return {videoChunks, type: file.type, name: file.name, numberOfChunks: id}
+}
+
+
+
 
 function filterFiles(files, photos)
 {
@@ -89,6 +143,9 @@ function createThumbnail(file)
     return img
 }
 
+
+
+
 filesList.addEventListener("click", (e) => {
     let test = e.target.id.slice(8,)
     if(e.target.classList.value === "cancel-button")
@@ -106,6 +163,8 @@ filesList.addEventListener("click", (e) => {
     }
 })
 
+
+// drag and drop functions
 fileUploadBox.addEventListener("drop", (e) => {
     e.preventDefault()
     handleFiles(e.dataTransfer.files) 
@@ -127,70 +186,9 @@ fileUploadBox.addEventListener("dragleave", (e) => {
 })
 
 
-formSubmit.addEventListener("click", (e) => {
-    e.preventDefault()
-    let formData = new FormData();
-    if(photos.length == 0)
-    {
-        notify.classList.remove("notify-hide")
-        notifyText.textContent = "No Files were added."
-        notify.style.background = "#FBEFEB"
-        notify.style.border = "2px solid #FC5758"
-        setTimeout(() => {
-            notify.classList.add("notify-hide");
-        },5000)
-        return
-    }
-    if(passkey.value != "")
-    {
-        formData.append("passkey",passkey.value)
-        photos.forEach((file) => formData.append("files", file));
-        postingData(formData)
-    }
-    else
-    {
-        notify.classList.remove("notify-hide")
-        notifyText.textContent = "Passkey wasn't given."
-        notify.style.background = "#FBEFEB"
-        notify.style.border = "2px solid #FC5758"
-        setTimeout(() => {
-            notify.classList.add("notify-hide");
-        },5000)
-    }    
-})
 
-async function postingData(formData)
-{
-    loadingBG.classList.remove("notify-hide")
-    let res = await fetch("http://localhost:3000/uploadmedia",{ method: "POST",body: formData, headers: {Authorization: `Bearer ${passkey.value}`}})
-    if(!res.ok)
-    {
-        let obj = await res.json()
-        console.log("there was an Error")
-        notify.classList.remove("notify-hide")
-        loadingBG.classList.add("notify-hide");
-        notifyText.textContent = obj.message
-        notify.style.background = "#FBEFEB"
-        notify.style.border = "2px solid #FC5758"
-        
-        setTimeout(() => {
-            notify.classList.add("notify-hide");
-        },5000)
-        return
-    }
-    let obj = await res.json()
-    console.log(obj)
-    removeFromList(obj.data.photosUploaded)
-    notify.classList.remove("notify-hide")
-    loadingBG.classList.add("notify-hide");
-    notify.style.background = "#F1F8F4"
-    notify.style.border = "2px solid #50dc6c"
-    notifyText.textContent = obj.message
-    setTimeout(() => {
-        notify.classList.add("notify-hide");
-    },5000)
-    
-}
+
+
 
 function removeFromList(data)
 {
@@ -225,7 +223,113 @@ function filterPhotos(data, photos)
 }
 
 
-fileBrowserInput.addEventListener("change", (e) => handleFiles(e.target.files))
-fileBrowserButton.addEventListener("click", () => fileBrowserInput.click())
+
+// Form submit 
+formSubmit.addEventListener("click", async (e) => {
+    e.preventDefault()
+    if(media.length == 0)
+    {
+        notify.classList.remove("notify-hide")
+        notifyText.textContent = "No Files were added."
+        notify.style.background = "#FBEFEB"
+        notify.style.border = "2px solid #FC5758"
+        setTimeout(() => {
+            notify.classList.add("notify-hide");
+        },5000)
+        return
+    }
+    if(passkey.value != "")
+    {
+        for (const file of media) {
+
+            if(file.type.startsWith("image"))
+            { 
+                await smallUpload(file)
+            }
+            if(file.type.startsWith("video"))
+            {  
+                await largeFileUpload(file)
+            }
+        }
+        return
+    }
+    else
+    {
+        notify.classList.remove("notify-hide")
+        notifyText.textContent = "Passkey wasn't given."
+        notify.style.background = "#FBEFEB"
+        notify.style.border = "2px solid #FC5758"
+        setTimeout(() => {
+            notify.classList.add("notify-hide");
+        },5000)
+    }    
+})
 
 
+// posting to server
+async function postingData(formData)
+{
+    loadingBG.classList.remove("notify-hide")
+    let res = await fetch("http://localhost:3000/uploadmedias3",{ method: "POST",body: formData, headers: {Authorization: `Bearer ${passkey.value}`}})
+    if(!res.ok)
+    {
+        let obj = await res.json()
+        console.log("there was an Error")
+        notify.classList.remove("notify-hide")
+        loadingBG.classList.add("notify-hide");
+        notifyText.textContent = obj.message
+        notify.style.background = "#FBEFEB"
+        notify.style.border = "2px solid #FC5758"
+        
+        setTimeout(() => {
+            notify.classList.add("notify-hide");
+        },5000)
+        return
+    }
+    let obj = await res.json()
+    console.log(obj)
+    //removeFromList(obj.data.photosUploaded)
+    notify.classList.remove("notify-hide")
+    loadingBG.classList.add("notify-hide");
+    notify.style.background = "#F1F8F4"
+    notify.style.border = "2px solid #50dc6c"
+    notifyText.textContent = obj.message
+    setTimeout(() => {
+        notify.classList.add("notify-hide");
+    },5000)
+    
+}
+
+
+async function smallUpload(smallFile)
+{
+    let formData = new FormData();
+    formData.append("passkey",passkey.value)
+    formData.append("file", smallFile);
+    loadingBG.classList.remove("notify-hide")
+    let res = await fetch("http://localhost:3000/uploadmedias3",{ method: "POST",body: formData, headers: {Authorization: `Bearer ${passkey.value}`}})
+}
+
+async function largeFileUpload(largeFile)
+{
+    let parts = []
+    let startres = await fetch("http://localhost:3000/startMultipartUpload",{ method: "POST",body: JSON.stringify({name:`${largeFile.name}`}), headers: {Authorization: `Bearer ${passkey.value}`, "Content-Type": "application/json"}})
+    let {uploadId} = await startres.json()
+    console.log(uploadId)
+    for (const [index,chunk] of largeFile.videoChunks.entries()) {
+        let formData = new FormData();
+        formData.append("passkey",passkey.value)
+        formData.append("partNumber", index+1)
+        formData.append("file", chunk);
+        formData.append("name",largeFile.name)
+        formData.append("uploadId", uploadId)
+        loadingBG.classList.remove("notify-hide")
+        let res = await fetch("http://localhost:3000/uploadpartss3",{ method: "POST",body: formData, headers: {Authorization: `Bearer ${passkey.value}`}})
+        let data = await res.json();
+        parts.push({ETag: data.Etag, PartNumber: index+1})
+    }
+    console.log(parts)
+    let endres = await fetch("http://localhost:3000/finishMultipartUpload",{ method: "POST",body: JSON.stringify({name:`${largeFile.name}`, uploadId: `${uploadId}`, parts: `${parts}`}), headers: {Authorization: `Bearer ${passkey.value}`, "Content-Type": "application/json"}})
+    let end = await endres.json()
+    console.log(end)
+}

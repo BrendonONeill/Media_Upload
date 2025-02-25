@@ -3,7 +3,9 @@ import { dirname, join } from 'path';
 import {fileURLToPath} from 'url';
 import 'dotenv/config'
 import upload from "./util/multer.js";
-import cloudinary from "./util/cloudinary.js";
+//import cloudinary from "./util/cloudinary.js";
+import { PutObjectCommand, CreateMultipartUploadCommand, UploadPartCommand, CompleteMultipartUploadCommand } from "@aws-sdk/client-s3";
+import { s3 } from "./util/aws.js";
 
 
 const app = express()
@@ -59,6 +61,88 @@ app.post("/uploadmedia", upload.array('files', 20), async (req, res) => {
     {
         res.status(401).json({error:"access was denied",message: "Passkey was incorrect, Please try again."})
     }
+})
+
+
+app.post("/smalluploads3", upload.single('file'), async (req, res) => {
+    console.log(req.file)
+    console.log(req.body)
+    //const bucketName = process.env.BUCKET_NAME
+
+    //const params = {
+    //    Bucket: bucketName,
+    //    Key: req.file.originalname,
+    //    Body: req.file.buffer,
+    //    ContentType: req.file.mimetype
+    //}
+    
+    //const command = new PutObjectCommand(params);
+
+    //await s3.send(command)
+    res.status(200).json({message: `Files were successfully uploaded`, data: ""})
+    
+})
+
+app.post("/startMultipartUpload", async (req, res) => {
+    console.log("/////////////////////////////////////////////// START //////////////////////////////////////////////////////")
+    console.log(req.body)
+    let key = req.body.name
+    const bucketName = process.env.BUCKET_NAME
+
+    const params = {
+        Bucket: bucketName,
+        Key: key,
+    }
+
+    const command = new CreateMultipartUploadCommand(params)
+    const multipartUpload = await s3.send(command);
+    res.status(200).json({message: `Files were successfully uploaded`, data: "", uploadId: multipartUpload.UploadId})
+    
+})
+
+
+app.post("/uploadpartss3", upload.single('file'), async (req, res) => {
+    console.log("/////////////////////////////////////////////// MIDDLE //////////////////////////////////////////////////////")
+    console.log(req.file)
+    console.log(req.body)
+    const bucketName = process.env.BUCKET_NAME
+
+    const params = {
+        Bucket: bucketName,
+        Key: req.body.name,
+        UploadId: req.body.uploadId,
+        Body: req.file.buffer,
+        PartNumber: req.body.partNumber,
+    }
+    
+
+    const command = new UploadPartCommand(params)
+
+    let resa = await s3.send(command)
+    res.status(200).json({message: `Files were successfully uploaded`, data: "", Etag: resa.ETag})
+    
+})
+
+app.post("/finishMultipartUpload", async (req, res) => {
+    console.log("/////////////////////////////////////////////// END //////////////////////////////////////////////////////")
+    //console.log(req.body)
+    console.log(req.body.parts[1])
+    const bucketName = process.env.BUCKET_NAME
+
+    const params = {
+        Bucket: bucketName,
+        Key: req.body.name,
+        UploadId: req.body.uploadId,
+        MultipartUpload: { Parts: req.body.parts}
+    }
+    
+    const command = new CompleteMultipartUploadCommand(params);
+
+    let g = await s3.send(command)
+    console.log(g)
+
+    res.status(200).json({message: `Files were successfully uploaded`, data: ""})
+    
 })
 
 app.get("/showfile", (req,res) => { 
