@@ -8,59 +8,61 @@ const passkey = document.querySelector("#passkey");
 const notify = document.querySelector(".notify");
 const notifyText = document.querySelector(".update");
 const loadingBG = document.querySelector(".loading-bg");
+const addFilesButton = document.querySelector(".add-files-button")
+const loadingUpdating = document.querySelector(".loading-updater")
+const block = "/video.svg"
 
 // array of media
 let media = [];
-let photos = []
+let tempMedia = []
 
 //when
 fileBrowserInput.addEventListener("change", (e) => handleFiles(e.target.files))
 fileBrowserButton.addEventListener("click", () => fileBrowserInput.click())
+addFilesButton.addEventListener("click", () => fileBrowserInput.click())
 
 const handleFiles = ([...files] = []) =>
 {
-
-
     for(let i = 0; i < files.length; i++)
     {
         if(files[i].type.startsWith("image"))
         {
-            media.push(files[i])
+            tempMedia.push(files[i])
         }
-        if(files[i].type.startsWith("video"))
+        else if(files[i].type.startsWith("video"))
         {
             let test = videoObjectCreator(files[i])
-            media.push(test)
-        }
-    }
-    console.log(media)
-
-    return
-
-
-        if(photos.length <= 0)
-        {
-            photos = [...photos, ...files]
+            tempMedia.push(test)
         }
         else
         {
-            if(files.length > 0)
-            {
-                photos = filterFiles(files, photos)
-            }
-            
+            errorFlashCard({message: "Please only add Images and videos."})
         }
-        if(photos.length == 0) return
-        filesCount.textContent = `${photos.length}/20 files`
-        console.log(photos)
-        document.querySelector(".file-list").innerHTML = ""
-        for (let i = 0; i < photos.length; i++)
+    }
+    if(media.length <= 0)
+    {
+        media = [...media, ...tempMedia]
+    } 
+    else
+    {
+        if(tempMedia.length > 0)
         {
-            let img = createThumbnail(photos[i])
-            let item = generateListItem(photos[i], i)
-            item.querySelector(".file-image").append(img)
-            document.querySelector(".file-list").append(item)
-        } 
+                media = filterFiles(tempMedia, media)
+        }
+    }     
+    if(media.length == 0) return
+    filesCount.textContent = `${media.length}/20 files`
+    document.querySelector(".file-list").innerHTML = ""
+    for (let i = 0; i < media.length; i++)
+    {
+        let img = createThumbnail(media[i])
+        let item = generateListItem(media[i], i)
+        item.querySelector(".file-image").append(img)
+        document.querySelector(".file-list").append(item)
+    } 
+
+    tempMedia = []
+    fileBrowserInput.value = ''
 }
 
 
@@ -72,7 +74,6 @@ function videoObjectCreator(file)
     let chunkSize = (1024 * 1024) * 8
     let end = file.size
     let id = 0
-    console.log(file, end, start, typeof(file))
     while(start < end)
      {
           id += 1
@@ -86,19 +87,19 @@ function videoObjectCreator(file)
           
           start = start + chunkSize
      }
-    return {videoChunks, type: file.type, name: file.name, numberOfChunks: id}
+    return {videoChunks, type: file.type, name: file.name, numberOfChunks: id, size: file.size}
 }
 
 
 
 
-function filterFiles(files, photos)
+function filterFiles(files, media)
 {
-    for(let i = 0; i < photos.length; i++)
+    for(let i = 0; i < media.length; i++)
     {
-        files = files.filter((file) => (file.name != photos[i].name))
+        files = files.filter((file) => (file.name != media[i].name))
     }
-   return [...photos, ...files]
+   return [...media, ...files]
 }
 
 function generateListItem(file, num)
@@ -137,7 +138,14 @@ function fileSize(bytes)
 function createThumbnail(file)
 {
     let img = document.createElement("img")
-    img.src = URL.createObjectURL(file)
+    if(file.type.startsWith("video"))
+    {
+        img.src = block
+    }
+    else
+    {
+        img.src = URL.createObjectURL(file)
+    }
     img.style.width = '100%'
     img.style.height = '100%'
     return img
@@ -147,7 +155,7 @@ function createThumbnail(file)
 
 
 filesList.addEventListener("click", (e) => {
-    let test = e.target.id.slice(8,)
+    let id = e.target.id.slice(8,)
     if(e.target.classList.value === "cancel-button")
     {
         let item = e.target.closest("li")
@@ -155,11 +163,10 @@ filesList.addEventListener("click", (e) => {
         {
             item.remove()
         }
-        console.log(test)
-        photos[test] = null
-        photos = photos.filter((photo) => (photo != null))
+        media[id] = null
+        media = media.filter((m) => (m != null))
+        filesCount.textContent = `${media.length}/20 files`
         handleFiles()
-
     }
 })
 
@@ -180,7 +187,6 @@ fileUploadBox.addEventListener("dragover", (e) => {
 
 fileUploadBox.addEventListener("dragleave", (e) => {
     e.preventDefault()
-    console.log("Drag Leave")
     fileUploadBox.classList.remove("active")
      fileUploadBox.querySelector(".file-instructions").textContent = "Drag file here or"
 })
@@ -200,25 +206,25 @@ function removeFromList(data)
             item.remove()
         }
     })
-    photos = filterPhotos(data, photos)
-    filesCount.textContent = `${photos.length}/20 files`
+    media = filterMedia(data, media)
+    filesCount.textContent = `${media.length}/20 files`
 }
 
-function filterPhotos(data, photos)
+function filterMedia(data, media)
 {
     for(let i = 0; i < data.length; i++)
     {
-        for(let j = 0; j < photos.length; j++)
+        for(let j = 0; j < media.length; j++)
         {
-            if(data[i] == photos[j].name)
+            if(data[i] == media[j].name)
             {
-                photos[j] = null
+                media[j] = null
                 break
             }
         }
     }
 
-    return photos.filter(photo => photo !== null)
+    return media.filter(m => m !== null)
     
 }
 
@@ -229,39 +235,30 @@ formSubmit.addEventListener("click", async (e) => {
     e.preventDefault()
     if(media.length == 0)
     {
-        notify.classList.remove("notify-hide")
-        notifyText.textContent = "No Files were added."
-        notify.style.background = "#FBEFEB"
-        notify.style.border = "2px solid #FC5758"
-        setTimeout(() => {
-            notify.classList.add("notify-hide");
-        },5000)
+        errorFlashCard({message: "No Files were added"})
         return
     }
     if(passkey.value != "")
     {
-        for (const file of media) {
+        loadingUpdating.textContent = `Uploading... ${0}/${media.length}`
+        const uploadData = []
+        for (const [index,file] of media.entries()) {
 
             if(file.type.startsWith("image"))
             { 
-                await smallUpload(file)
+              uploadData.push(await smallUpload(file))
             }
             if(file.type.startsWith("video"))
             {  
-                await largeFileUpload(file)
+                uploadData.push(await largeFileUpload(file))
             }
+            loadingUpdating.textContent = `Uploading... ${index+1}/${media.length}`
         }
         return
     }
     else
     {
-        notify.classList.remove("notify-hide")
-        notifyText.textContent = "Passkey wasn't given."
-        notify.style.background = "#FBEFEB"
-        notify.style.border = "2px solid #FC5758"
-        setTimeout(() => {
-            notify.classList.add("notify-hide");
-        },5000)
+        errorFlashCard({message:"Passkey wasn't given"})
     }    
 })
 
@@ -274,7 +271,15 @@ async function postingData(formData)
     if(!res.ok)
     {
         let obj = await res.json()
-        console.log("there was an Error")
+        errorFlashCard(obj)
+        return
+    }
+    let obj = await res.json()
+    successfulFlashCard(obj)    
+}
+
+function errorFlashCard(obj)
+{
         notify.classList.remove("notify-hide")
         loadingBG.classList.add("notify-hide");
         notifyText.textContent = obj.message
@@ -284,11 +289,11 @@ async function postingData(formData)
         setTimeout(() => {
             notify.classList.add("notify-hide");
         },5000)
-        return
-    }
-    let obj = await res.json()
-    console.log(obj)
-    //removeFromList(obj.data.photosUploaded)
+}
+
+function successfulFlashCard(obj)
+{
+    removeFromList(obj.data)
     notify.classList.remove("notify-hide")
     loadingBG.classList.add("notify-hide");
     notify.style.background = "#F1F8F4"
@@ -297,7 +302,6 @@ async function postingData(formData)
     setTimeout(() => {
         notify.classList.add("notify-hide");
     },5000)
-    
 }
 
 
@@ -307,15 +311,45 @@ async function smallUpload(smallFile)
     formData.append("passkey",passkey.value)
     formData.append("file", smallFile);
     loadingBG.classList.remove("notify-hide")
-    let res = await fetch("http://localhost:3000/uploadmedias3",{ method: "POST",body: formData, headers: {Authorization: `Bearer ${passkey.value}`}})
+    try {
+        let res = await fetch("http://localhost:3000/smalluploads3",{ method: "POST",body: formData, headers: {Authorization: `Bearer ${passkey.value}`}})
+        if(res.ok)
+        {
+            let obj = await res.json()
+            successfulFlashCard(obj)
+            return {data: smallFile.name, success: true}
+        }
+        else
+        {
+            throw new Error("handle error")
+        }
+    } catch (error) {
+        return {data: smallFile.name, success: false}
+    }
 }
 
 async function largeFileUpload(largeFile)
 {
-    let parts = []
-    let startres = await fetch("http://localhost:3000/startMultipartUpload",{ method: "POST",body: JSON.stringify({name:`${largeFile.name}`}), headers: {Authorization: `Bearer ${passkey.value}`, "Content-Type": "application/json"}})
-    let {uploadId} = await startres.json()
-    console.log(uploadId)
+    const chunkData= {
+        ETag: [],
+        PartNumber: []
+    }
+    let uploadId = null
+    try {
+        let startres = await fetch("http://localhost:3000/startMultipartUpload",{ method: "POST",body: JSON.stringify({name:`${largeFile.name}`}), headers: {Authorization: `Bearer ${passkey.value}`, "Content-Type": "application/json"}})
+        if(startres.ok)
+        {
+            let {uploadId: id} = await startres.json()
+            uploadId = id
+        }
+        else
+        {
+            let err = await startres.json()
+            throw new Error(err.message)
+        }    
+    } catch (error) {
+        console.error(error)
+    }
     for (const [index,chunk] of largeFile.videoChunks.entries()) {
         let formData = new FormData();
         formData.append("passkey",passkey.value)
@@ -324,12 +358,67 @@ async function largeFileUpload(largeFile)
         formData.append("name",largeFile.name)
         formData.append("uploadId", uploadId)
         loadingBG.classList.remove("notify-hide")
-        let res = await fetch("http://localhost:3000/uploadpartss3",{ method: "POST",body: formData, headers: {Authorization: `Bearer ${passkey.value}`}})
-        let data = await res.json();
-        parts.push({ETag: data.Etag, PartNumber: index+1})
+        try {
+            let res = await fetch("http://localhost:3000/uploadpartss3",{ method: "POST",body: formData, headers: {Authorization: `Bearer ${passkey.value}`}})
+            if(res.ok)
+            {
+                let data = await res.json();
+                chunkData.ETag.push(data.Etag)
+                chunkData.PartNumber.push(index+1)
+            }
+            else
+            {
+                throw new Error("")
+            }
+        } catch (error) {
+            // throw flash card
+            // abort multipartupload
+            abortMultiPartUpload(uploadId, largeFile.name)
+        }
+        
     }
-    console.log(parts)
-    let endres = await fetch("http://localhost:3000/finishMultipartUpload",{ method: "POST",body: JSON.stringify({name:`${largeFile.name}`, uploadId: `${uploadId}`, parts: `${parts}`}), headers: {Authorization: `Bearer ${passkey.value}`, "Content-Type": "application/json"}})
-    let end = await endres.json()
-    console.log(end)
+    let formData = new FormData();
+    formData.append("name",largeFile.name)
+    formData.append("uploadId", uploadId)
+    chunkData.ETag.forEach(e => formData.append("ETag", e))
+    chunkData.PartNumber.forEach(p => formData.append("PartNumber", p))
+    try {
+        let endres = await fetch("http://localhost:3000/finishMultipartUpload",{ method: "POST",body: formData, headers: {Authorization: `Bearer ${passkey.value}`}})
+        if(endres.ok)
+        {
+            let end = await endres.json()
+            successfulFlashCard(end)
+            return {data: largeFile.name, success: true}
+        }
+        else
+        {
+             throw new Error("")
+        }
+    } catch (error) {
+         // throw flash card
+            // abort multipartupload
+    }
+}
+
+
+async function abortMultiPartUpload(uploadId, key)
+{
+    let formData = new FormData();
+    formData.append("name",key)
+    formData.append("uploadId", uploadId)
+    try {
+        let res = await fetch("http://localhost:3000/abortMultipartUpload",{ method: "POST",body: formData, headers: {Authorization: `Bearer ${passkey.value}`}})
+        if(res.ok)
+        {
+            let end = await endres.json()
+            successfulFlashCard(end)
+        }
+        else
+        {
+             throw new Error("")
+        }
+    } catch (error) {
+         // throw flash card
+         return {data: key, success: false}
+    }
 }
