@@ -35,6 +35,8 @@
                 <div class="uploader-header">
                     <h2 class="uploder-title">FILE UPLOAD</h2>
                     <h4 class="file-completed-status">0/20 Files</h4>
+                    <button class="add-files-button">Add files <img src="./plus.svg" width="20px" height="20px"
+                            alt=""></button>
                 </div>
                 <ul class="file-list">
                 </ul>
@@ -43,7 +45,7 @@
                         <span class="file-instructions">Drag file here or</span>
                         <span class="file-browser-button">browse</span>
                     </h2>
-                    <input type="file" class="file-browser-input" accept="image/*" required multiple id="data"
+                    <input type="file" class="file-browser-input" accept="image/*,video/*" required multiple id="data"
                         name="files" hidden>
                 </div>
             </div>
@@ -55,12 +57,12 @@
     </main>
     <div class="loading-bg notify-hide">
         <div class="loading">
-            <p>Uploading...</p>
+            <p class="loading-updater">Uploading... 0/0</p>
             <img src="/spinner.svg" height="60" width="60" alt="">
         </div>
     </div>
     <footer>
-        <p>Kirsty & Niall</p>
+        <p class="footer-text">Kirsty & Niall 2025</p>
     </footer>
 </body>
 
