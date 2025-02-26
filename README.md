@@ -8,4 +8,9 @@
 - chunk video
 - call bucket and start multipart upload
 - convert blobs to buffer and upload
-- call complete multipart upload 
+- call complete multipart upload
+
+## Working on
+- not deleting after upload 
+- Filter after upload with error 
+- test/fix abort function  
