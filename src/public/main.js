@@ -25,6 +25,11 @@ const handleFiles = ([...files] = []) =>
 {
     for(let i = 0; i < files.length; i++)
     {
+        debugger
+        if(tempMedia.length == 20)
+        {
+            break
+        }
         if(files[i].type.startsWith("image"))
         {
             tempMedia.push(files[i])
@@ -201,14 +206,21 @@ function removeFromList(data)
     const listItems = filesList.querySelectorAll("li")
     listItems.forEach((item) => {
         let itemText = item.querySelector(".file-name")
-        if(data.includes(itemText.textContent))
+        console.log(data, itemText)
+        for(let i= 0; i < data.length; i++)
         {
-            item.remove()
+            if(data[i].data == itemText.textContent)
+            {
+                item.remove()
+            }
         }
     })
     media = filterMedia(data, media)
+    console.log(media)
     filesCount.textContent = `${media.length}/20 files`
 }
+
+
 
 function filterMedia(data, media)
 {
@@ -216,16 +228,15 @@ function filterMedia(data, media)
     {
         for(let j = 0; j < media.length; j++)
         {
-            if(data[i] == media[j].name)
+            console.log(data[i].data, " = ", media[j].name)
+            if(data[i].data == media[j].name)
             {
-                media[j] = null
+                media[j] = {name: ""}
                 break
             }
         }
     }
-
-    return media.filter(m => m !== null)
-    
+    return media.filter(m => m.name !== "") 
 }
 
 
@@ -240,8 +251,10 @@ formSubmit.addEventListener("click", async (e) => {
     }
     if(passkey.value != "")
     {
+        console.log(media)
         loadingUpdating.textContent = `Uploading... ${0}/${media.length}`
         const uploadData = []
+        loadingBG.classList.remove("notify-hide")
         for (const [index,file] of media.entries()) {
 
             if(file.type.startsWith("image"))
@@ -254,11 +267,13 @@ formSubmit.addEventListener("click", async (e) => {
             }
             loadingUpdating.textContent = `Uploading... ${index+1}/${media.length}`
         }
+        removeFromList(uploadData)
+        successfulFlashCard(uploadData)
         return
     }
     else
     {
-        errorFlashCard({message:"Passkey wasn't given"})
+        errorFlashCard({message:"Passkey wasn't entered."})
     }    
 })
 
@@ -266,7 +281,7 @@ formSubmit.addEventListener("click", async (e) => {
 // posting to server
 async function postingData(formData)
 {
-    loadingBG.classList.remove("notify-hide")
+    
     let res = await fetch("http://localhost:3000/uploadmedias3",{ method: "POST",body: formData, headers: {Authorization: `Bearer ${passkey.value}`}})
     if(!res.ok)
     {
@@ -293,12 +308,19 @@ function errorFlashCard(obj)
 
 function successfulFlashCard(obj)
 {
-    removeFromList(obj.data)
+    let count = 0
+    for(let i = 0; i < obj.length; i++)
+    {
+        if(obj[i].success == true)
+        {
+            count++
+        }
+    }
     notify.classList.remove("notify-hide")
     loadingBG.classList.add("notify-hide");
     notify.style.background = "#F1F8F4"
     notify.style.border = "2px solid #50dc6c"
-    notifyText.textContent = obj.message
+    notifyText.textContent = `${count}/${obj.length} files upload successfully.`
     setTimeout(() => {
         notify.classList.add("notify-hide");
     },5000)
@@ -310,13 +332,12 @@ async function smallUpload(smallFile)
     let formData = new FormData();
     formData.append("passkey",passkey.value)
     formData.append("file", smallFile);
-    loadingBG.classList.remove("notify-hide")
+    
     try {
         let res = await fetch("http://localhost:3000/smalluploads3",{ method: "POST",body: formData, headers: {Authorization: `Bearer ${passkey.value}`}})
         if(res.ok)
         {
             let obj = await res.json()
-            successfulFlashCard(obj)
             return {data: smallFile.name, success: true}
         }
         else
@@ -357,7 +378,6 @@ async function largeFileUpload(largeFile)
         formData.append("file", chunk);
         formData.append("name",largeFile.name)
         formData.append("uploadId", uploadId)
-        loadingBG.classList.remove("notify-hide")
         try {
             let res = await fetch("http://localhost:3000/uploadpartss3",{ method: "POST",body: formData, headers: {Authorization: `Bearer ${passkey.value}`}})
             if(res.ok)
@@ -387,7 +407,6 @@ async function largeFileUpload(largeFile)
         if(endres.ok)
         {
             let end = await endres.json()
-            successfulFlashCard(end)
             return {data: largeFile.name, success: true}
         }
         else
@@ -411,7 +430,6 @@ async function abortMultiPartUpload(uploadId, key)
         if(res.ok)
         {
             let end = await endres.json()
-            successfulFlashCard(end)
         }
         else
         {

@@ -1,6 +1,7 @@
 import express from "express"
 import { dirname, join } from 'path';
 import {fileURLToPath} from 'url';
+import cors from 'cors'
 import 'dotenv/config'
 
 //import cloudinary from "./util/cloudinary.js";
@@ -14,6 +15,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 app.use(express.static(__dirname + '/public'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cors())
+app.options('*', cors());
 
 import upload from "./util/multer.js";
 
