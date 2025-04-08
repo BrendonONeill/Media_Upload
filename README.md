@@ -11,6 +11,6 @@
 - call complete multipart upload
 
 ## Working on
-- not deleting after upload 
-- Filter after upload with error 
-- test/fix abort function  
+- add indexedDB
+- Filter broken with one img and need to deal with success and failure
+- On abortion stioll runs other chunks need a hard stop 
