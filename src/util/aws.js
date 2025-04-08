@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client} from "@aws-sdk/client-s3";
 
 const bucketRegion = process.env.BUCKET_REGION
 const accessKey = process.env.BUCKET_ACCESS_KEY

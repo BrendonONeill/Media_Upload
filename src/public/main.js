@@ -227,7 +227,7 @@ function removeFromList(data)
     listItems.forEach((item) => {
         let itemText = item.querySelector(".file-name")
         console.log(data, itemText)
-        for(let i= 0; i <= data.length; i++)
+        for(let i= 0; i < data.length; i++)
         {
             if(data[i].data == itemText.textContent)
             {
