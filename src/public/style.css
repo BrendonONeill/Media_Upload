@@ -191,6 +191,7 @@ form {
     grid-row: 2/3;
     grid-column: 2/6;
     margin-left: 0.5rem;
+    padding: 1rem;
     margin-top: 0.5rem;
     display: flex;
     justify-content: flex-start;
@@ -201,6 +202,7 @@ form {
 .file-name {
     font-size: 1rem;
     font-weight: 600;
+    margin-left: 1rem;
 }
 
 .file-info {
@@ -210,6 +212,11 @@ form {
 
 .file-size {
     padding: 0.2rem;
+}
+
+.file-type
+{
+    width: 50px;
 }
 
 .file-status {
@@ -336,6 +343,7 @@ form {
 }
 
 .loading {
+    width: 80%;
     color: white;
     display: flex;
     align-items: center;
@@ -355,6 +363,23 @@ form {
     left: 0;
     background-color: #00000079;
     z-index: 10;
+}
+
+.progress-bar-container
+{
+    height: 20px;
+    width: 100%;
+    border-radius: 5px;
+    border: 2px solid white;
+}
+
+.progress-bar
+{
+    height: 100%;
+    width: 0%;
+    border-radius: 5px;
+    background-color: #364A3F;
+    transition: all 0.3s linear;
 }
 
 .notify-hide {

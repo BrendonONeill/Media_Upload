@@ -11,6 +11,9 @@ const loadingBG = document.querySelector(".loading-bg");
 const addFilesButton = document.querySelector(".add-files-button")
 const loadingUpdating = document.querySelector(".loading-updater")
 const block = "/video.svg"
+const progressBar = document.querySelector(".progress-bar")
+
+let listMemory = 0
 
 // array of media
 let media = [];
@@ -25,7 +28,7 @@ const handleFiles = ([...files] = []) =>
 {
     for(let i = 0; i < files.length; i++)
     {
-        debugger
+        
         if(tempMedia.length == 20)
         {
             break
@@ -68,6 +71,7 @@ const handleFiles = ([...files] = []) =>
 
     tempMedia = []
     fileBrowserInput.value = ''
+    console.log(fileSize(listMemory))
 }
 
 
@@ -113,19 +117,34 @@ function generateListItem(file, num)
     li.innerHTML = `
         <div class="file-image"></div>
         <div class="file-details">
-            <small class="file-name">${file.name}</small>
+            <small class="file-name">${nameCleanUp(file.name)}</small>
         </div>
         <div class="cancel-button-container">
             <button class="cancel-button" id="photoId-${num}">x</button>
         </div>
         <div class="file-size-container">
+            <small class="file-type">${file.name.split('.').pop()}</small>
             <small class="file-size">${fileSize(file.size)}</small>
         </div>`
     li.classList.add("file-item")
     li.id = `${num}`
+    listMemory += file.size
     return li
 }
 
+
+function nameCleanUp(name)
+{
+    if(name.length < 20)
+    {
+        return name
+    }
+    else
+    {
+        let text = name.slice(0,20) + '...'
+        return text
+    }
+}
 function fileSize(bytes)
 {
     if(bytes > 1048576)
@@ -151,8 +170,9 @@ function createThumbnail(file)
     {
         img.src = URL.createObjectURL(file)
     }
-    img.style.width = '100%'
-    img.style.height = '100%'
+    img.style.maxHeight= '100%'
+    img.style.maxWidth = '100%'
+    img.style.objectFit = 'contain';
     return img
 }
 
@@ -207,10 +227,11 @@ function removeFromList(data)
     listItems.forEach((item) => {
         let itemText = item.querySelector(".file-name")
         console.log(data, itemText)
-        for(let i= 0; i < data.length; i++)
+        for(let i= 0; i <= data.length; i++)
         {
             if(data[i].data == itemText.textContent)
             {
+                console.log(item)
                 item.remove()
             }
         }
@@ -265,6 +286,8 @@ formSubmit.addEventListener("click", async (e) => {
             {  
                 uploadData.push(await largeFileUpload(file))
             }
+
+            progressBar.style.width = `${Math.round(((index+1)/media.length)*100)}%` 
             loadingUpdating.textContent = `Uploading... ${index+1}/${media.length}`
         }
         removeFromList(uploadData)
@@ -440,3 +463,10 @@ async function abortMultiPartUpload(uploadId, key)
          return {data: key, success: false}
     }
 }
+
+
+
+
+
+
+
