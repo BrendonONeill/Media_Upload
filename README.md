@@ -12,5 +12,8 @@
 
 ## Working on
 - add indexedDB
-- Filter broken with one img and need to deal with success and failure
-- On abortion stioll runs other chunks need a hard stop 
+- Filter broken with one image and need to deal with success and failure
+- On abortion still runs other chunks need a hard stop
+- The notification tab will have a close button that if an error occurs, will show an error tab with more information.
+- Need to download and change files
+- Clean up loading UI 
