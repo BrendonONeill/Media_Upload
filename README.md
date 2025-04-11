@@ -17,3 +17,7 @@
 - The notification tab will have a close button that if an error occurs, will show an error tab with more information.
 - Need to download and change files
 - Clean up loading UI 
+
+## Testing
+- need to test everything to make sure it works. 
+- set up retries (3 times)

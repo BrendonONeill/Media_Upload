@@ -7,6 +7,7 @@ let formSubmit = document.querySelector("#form-submit");
 const passkey = document.querySelector("#passkey");
 const notify = document.querySelector(".notify");
 const notifyText = document.querySelector(".update");
+const notifyButton = document.querySelector(".notify-button")
 const loadingBG = document.querySelector(".loading-bg");
 const addFilesButton = document.querySelector(".add-files-button")
 const loadingUpdating = document.querySelector(".loading-updater")
@@ -26,6 +27,7 @@ addFilesButton.addEventListener("click", () => fileBrowserInput.click())
 
 const handleFiles = ([...files] = []) =>
 {
+    console.log(files)
     for(let i = 0; i < files.length; i++)
     {
         
@@ -120,11 +122,11 @@ function generateListItem(file, num)
             <small class="file-name">${nameCleanUp(file.name)}</small>
         </div>
         <div class="cancel-button-container">
-            <button class="cancel-button" id="photoId-${num}">x</button>
+            <button class="cancel-button" id="photoId-${num}"></button>
         </div>
         <div class="file-size-container">
-            <small class="file-type">${file.name.split('.').pop()}</small>
             <small class="file-size">${fileSize(file.size)}</small>
+            <small class="file-type">${file.name.split('.').pop().toUpperCase()}</small>
         </div>`
     li.classList.add("file-item")
     li.id = `${num}`
@@ -274,17 +276,28 @@ formSubmit.addEventListener("click", async (e) => {
     {
         console.log(media)
         loadingUpdating.textContent = `Uploading... ${0}/${media.length}`
-        const uploadData = []
+        let uploadData = []
         loadingBG.classList.remove("notify-hide")
+        debugger
         for (const [index,file] of media.entries()) {
 
             if(file.type.startsWith("image"))
             { 
-              uploadData.push(await smallUpload(file))
+              let res = await passKeyCheck(uploadData, smallUpload, file)
+              if(!res)
+              {
+                return
+              }
+              uploadData = res
             }
             if(file.type.startsWith("video"))
             {  
-                uploadData.push(await largeFileUpload(file))
+              let res = await passKeyCheck(uploadData, largeFileUpload, file)
+              if(!res)
+              {
+                return
+              }
+              uploadData = res
             }
 
             progressBar.style.width = `${Math.round(((index+1)/media.length)*100)}%` 
@@ -299,6 +312,22 @@ formSubmit.addEventListener("click", async (e) => {
         errorFlashCard({message:"Passkey wasn't entered."})
     }    
 })
+
+async function passKeyCheck(uploadData,fn,file)
+{
+    try {
+        let returnedValue = await fn(file)
+        if(returnedValue.passKeyFailed)
+        {
+            throw new Error(returnedValue.error.message)
+        }
+        uploadData.push(returnedValue)
+        return uploadData
+       } catch (error) {
+        errorFlashCard({message: error.message})
+        return
+       }
+}
 
 
 // posting to server
@@ -345,9 +374,17 @@ function successfulFlashCard(obj)
     notify.style.border = "2px solid #50dc6c"
     notifyText.textContent = `${count}/${obj.length} files upload successfully.`
     setTimeout(() => {
-        notify.classList.add("notify-hide");
-    },5000)
+        if(!notify.classList.contains("notify-hide"))
+        {
+            notify.classList.add("notify-hide");
+        }
+    },20000)
 }
+
+notifyButton.addEventListener("click", (e) => {
+    e.preventDefault()
+    notify.classList.add("notify-hide");
+})
 
 
 async function smallUpload(smallFile)
@@ -355,25 +392,32 @@ async function smallUpload(smallFile)
     let formData = new FormData();
     formData.append("passkey",passkey.value)
     formData.append("file", smallFile);
+    let passKeyFailed = false
     
     try {
         let res = await fetch("http://localhost:3000/smalluploads3",{ method: "POST",body: formData, headers: {Authorization: `Bearer ${passkey.value}`}})
         if(res.ok)
         {
-            let obj = await res.json()
             return {data: smallFile.name, success: true}
         }
         else
         {
-            throw new Error("handle error")
+            let error = await res.json()
+            if(error.passKeyFailed)
+            {
+                passKeyFailed = true
+                throw new Error(error.message)
+            } 
+            throw new Error("failed to upload file")
         }
     } catch (error) {
-        return {data: smallFile.name, success: false}
+        return {data: smallFile.name, success: false, error: error, passKeyFailed: passKeyFailed}
     }
 }
 
 async function largeFileUpload(largeFile)
 {
+    let passKeyFailed = false
     const chunkData= {
         ETag: [],
         PartNumber: []
@@ -388,11 +432,15 @@ async function largeFileUpload(largeFile)
         }
         else
         {
-            let err = await startres.json()
-            throw new Error(err.message)
+            let error = await startres.json()
+            if(error.passKeyFailed)
+            {
+                passKeyFailed = true
+            } 
+            throw new Error(error.message)
         }    
     } catch (error) {
-        console.error(error)
+        return {data: largeFile.name, success: false, error: error, passKeyFailed: passKeyFailed}
     }
     for (const [index,chunk] of largeFile.videoChunks.entries()) {
         let formData = new FormData();
@@ -411,15 +459,20 @@ async function largeFileUpload(largeFile)
             }
             else
             {
-                throw new Error("")
+                let error = await startres.json()
+                if(error.passKeyFailed)
+                {
+                    passKeyFailed = true
+                } 
+                throw new Error(error.message)
             }
         } catch (error) {
-            // throw flash card
-            // abort multipartupload
+            
             abortMultiPartUpload(uploadId, largeFile.name)
+            return {data: largeFile.name, success: false, error: error, passKeyFailed: passKeyFailed}
         }
-        
     }
+
     let formData = new FormData();
     formData.append("name",largeFile.name)
     formData.append("uploadId", uploadId)
@@ -429,16 +482,21 @@ async function largeFileUpload(largeFile)
         let endres = await fetch("http://localhost:3000/finishMultipartUpload",{ method: "POST",body: formData, headers: {Authorization: `Bearer ${passkey.value}`}})
         if(endres.ok)
         {
-            let end = await endres.json()
-            return {data: largeFile.name, success: true}
+           await endres.json()
+           return {data: largeFile.name, success: true}
         }
         else
         {
-             throw new Error("")
+                let error = await end.json()
+                if(error.passKeyFailed)
+                {
+                    passKeyFailed = true
+                } 
+                throw new Error(error.message)
         }
     } catch (error) {
-         // throw flash card
-            // abort multipartupload
+        abortMultiPartUpload(uploadId, largeFile.name)
+        return {data: largeFile.name, success: false, error: error}
     }
 }
 
@@ -452,7 +510,7 @@ async function abortMultiPartUpload(uploadId, key)
         let res = await fetch("http://localhost:3000/abortMultipartUpload",{ method: "POST",body: formData, headers: {Authorization: `Bearer ${passkey.value}`}})
         if(res.ok)
         {
-            let end = await endres.json()
+            await endres.json()
         }
         else
         {

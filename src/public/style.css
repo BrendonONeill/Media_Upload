@@ -212,10 +212,12 @@ form {
 
 .file-size {
     padding: 0.2rem;
+    width: 68px;
 }
 
 .file-type
 {
+    margin-left: 1rem;
     width: 50px;
 }
 
@@ -241,19 +243,27 @@ form {
 
 .cancel-button {
     align-self: center;
+    background: url("./x.svg");
+    background-repeat: no-repeat;
+    background-size: cover;
     border: none;
     outline: none;
     background-color: transparent;
     cursor: pointer;
-    padding: 1px 5px;
-    font-size: 1.4rem;
+    padding: 2px;
     border: 2px solid transparent;
+    width: 25px;
+    height: 25px;
 }
+
 
 .cancel-button:hover {
     color: red;
     border-radius: 5px;
-    border: 2px solid red;
+    border: 2px solid #ff0000;
+    background: url("./red-x.svg");
+    background-repeat: no-repeat;
+    background-size: cover;
 }
 
 .file-upload-box {
@@ -283,6 +293,38 @@ form {
     text-decoration: underline;
 }
 
+.info
+{
+    border: 2px solid red;
+    border-radius: 50px;
+    background-color: #e45f5f;
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    cursor: pointer;
+    width: 100px;
+    height: 100px;
+}
+
+.info img
+{
+    width: 100%;
+    height: 100%;
+}
+
+.info:hover
+{
+    background-color: red;
+}
+
+
+.file-item-error
+{
+    border-left: 5px solid red;
+    background-color: #F7E8E8;
+}
+
+
 
 .active {
     border: 2px solid #5145ba;
@@ -304,9 +346,33 @@ form {
     display: flex;
     font-weight: bold;
     align-items: center;
-    justify-content: center;
+    justify-content:space-evenly;
     border-radius: 5px;
     text-align: center;
+    gap: 0 1.5rem;
+}
+
+.notify button
+{
+    align-self: center;
+    outline: none;
+    background-color: transparent;
+    cursor: pointer;
+    border: 2px solid black;
+    border-radius: 5px;
+    width: 25px;
+    height: 25px;
+}
+
+.notify button:hover
+{
+    border: 2px solid #6E967F;
+}
+
+.notify button img
+{
+    width: 100%;
+    height: 100%;
 }
 
 
@@ -352,10 +418,21 @@ form {
     gap: 1rem;
 }
 
+.loading img
+{
+    margin-bottom: 5rem;
+}
+
+.loading-updater
+{
+    font-size: 1.6rem;
+}
+
 .loading-bg {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
+    padding-top: 10rem;
     position: fixed;
     top: 0;
     right: 0;
@@ -442,6 +519,11 @@ footer {
         width: 35%;
     }
 
+    .file-name
+    {
+        font-size: 1.6rem;
+    }
+
     .file-item {
 
         grid-template-columns: repeat(8, 1fr);
@@ -465,12 +547,19 @@ footer {
         grid-column: 8/9;
     }
 
+    .cancel-button {
+        width: 35px;
+        height: 35px;
+    }
+
 
     header,
     .information {
-        width: 60%;
+        width: 56%;
         margin: auto;
     }
 
+
+    
 
 }

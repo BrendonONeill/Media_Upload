@@ -24,6 +24,7 @@ app.post("/smalluploads3", upload.single('file'), async (req, res) => {
     let acceptedPasskey = token == process.env.PASSKEY
     if(acceptedPasskey)
     {
+        console.log("/////////////////////////////////////////////// SMALL //////////////////////////////////////////////////////")
         const bucketName = process.env.BUCKET_NAME
 
         const params = {
@@ -39,17 +40,23 @@ app.post("/smalluploads3", upload.single('file'), async (req, res) => {
                 throw new Error("wasn't able to get presigned url");
             }
             let a = await fetch(url,{method: 'PUT', body: req.file.buffer, headers: { 'Content-Type':req.file.mimetype}})
-            res.status(200).json({message: `Files were successfully uploaded`, data: ""});
+            if(!a.ok)
+            {
+                throw new Error("wasn't able to upload file")
+            }
+            res.status(200).json({message: `Files were successfully uploaded`});
             
         } catch (error) {
-            res.status(400).json({error, message: "failed to upload"})
+            console.log(error)
+            res.status(400).json({error, message: "failed to upload file"})
         }  
     }
     else
     {
-        res.status(401).json({error:"access was denied",message: "Passkey was incorrect, Please try again."})
+        res.status(401).json({error:"access was denied", message: "Passkey was incorrect.", passKeyFailed: "true"})
     }
 })
+
 
 app.post("/startMultipartUpload", async (req, res) => {
 
@@ -67,12 +74,17 @@ app.post("/startMultipartUpload", async (req, res) => {
         }
 
         const command = new CreateMultipartUploadCommand(params)
-        const multipartUpload = await s3.send(command);
-        res.status(200).json({message: `Files were successfully uploaded`, data: "", uploadId: multipartUpload.UploadId})
+        try {
+            const multipartUpload = await s3.send(command);
+            res.status(200).json({message: `Files were successfully uploaded`, data: "", uploadId: multipartUpload.UploadId})
+        } catch (error) {
+            res.status(503).json({message: `Files failed to uploaded`})
+        }
+        
     }
     else
     {
-        res.status(401).json({error:"access was denied",message: "Passkey was incorrect, Please try again."})
+        res.status(401).json({error:"access was denied", message: "Passkey was incorrect.", passKeyFailed: "true"})
     }
 })
 
@@ -112,7 +124,7 @@ app.post("/uploadpartss3", upload.single('file'), async (req, res) => {
     }
     else
     {
-        res.status(401).json({error:"access was denied",message: "Passkey was incorrect, Please try again."})
+        res.status(401).json({error:"access was denied", message: "Passkey was incorrect.", passKeyFailed: "true"})
     }
     
 })
@@ -138,12 +150,16 @@ app.post("/finishMultipartUpload", upload.single('file'), async (req, res) => {
     
         const command = new CompleteMultipartUploadCommand(params);
 
-        let g = await s3.send(command)
-        res.status(200).json({message: `Files were successfully uploaded`, data: ""})
+        try {
+            let g = await s3.send(command)
+            res.status(200).json({message: `Files were successfully uploaded`})
+        } catch (error) {
+            res.status(501).json({message: `File failed to upload`})
+        }
     }
     else
     {
-        res.status(401).json({error:"access was denied",message: "Passkey was incorrect, Please try again."})
+        res.status(401).json({error:"access was denied", message: "Passkey was incorrect.", passKeyFailed: "true"})
     }
 })
 
@@ -167,7 +183,7 @@ app.post("/abortMultipartUpload", upload.single('file'), async (req, res) => {
     }
     else
     {
-        res.status(401).json({error:"access was denied",message: "Passkey was incorrect, Please try again."})
+        res.status(401).json({error:"access was denied",message: "Passkey was incorrect, Please try again.", noKey: "true"})
     }
 })
 
@@ -176,6 +192,8 @@ app.get("/showfile", (req,res) => {
     const __dirname = dirname(fileURLToPath(import.meta.url));
     res.sendFile(join(__dirname, 'index.html'));
 });
+
+
 
 
 app.listen("3000" ,() =>{
