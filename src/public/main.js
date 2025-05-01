@@ -13,8 +13,12 @@ const addFilesButton = document.querySelector(".add-files-button")
 const loadingUpdating = document.querySelector(".loading-updater")
 const block = "/video.svg"
 const progressBar = document.querySelector(".progress-bar")
+const fileMemory = document.querySelector(".files-memory")
 
 let listMemory = 0
+
+let mediaListMemory = 0
+let TempListMemory = 0
 
 // array of media
 let media = [];
@@ -27,22 +31,25 @@ addFilesButton.addEventListener("click", () => fileBrowserInput.click())
 
 const handleFiles = ([...files] = []) =>
 {
-    console.log(files)
     for(let i = 0; i < files.length; i++)
     {
         
-        if(tempMedia.length == 20)
+        if((media.length + tempMedia.length) == 20 || tempMedia.length == 20 || media.length == 20 || (mediaListMemory + TempListMemory + files[i].size) >= 5368709120)
         {
             break
         }
+        console.log(files[i])
         if(files[i].type.startsWith("image"))
         {
-            tempMedia.push(files[i])
+            let file = fileSizeChecker(files[i], mediaObjectCreator)
+            TempListMemory += file.size
+            tempMedia.push(file)
         }
         else if(files[i].type.startsWith("video"))
         {
-            let test = videoObjectCreator(files[i])
-            tempMedia.push(test)
+            let file = fileSizeChecker(files[i], mediaObjectCreator)
+            TempListMemory += file.size
+            tempMedia.push(file)
         }
         else
         {
@@ -60,7 +67,11 @@ const handleFiles = ([...files] = []) =>
                 media = filterFiles(tempMedia, media)
         }
     }     
-    if(media.length == 0) return
+    if(media.length == 0)
+    {
+        fileMemory.textContent = `0KB/5GB`
+        return
+    }
     filesCount.textContent = `${media.length}/20 files`
     document.querySelector(".file-list").innerHTML = ""
     for (let i = 0; i < media.length; i++)
@@ -70,17 +81,33 @@ const handleFiles = ([...files] = []) =>
         item.querySelector(".file-image").append(img)
         document.querySelector(".file-list").append(item)
     } 
-
     tempMedia = []
+    TempListMemory = 0
+    mediaListMemory = 0
     fileBrowserInput.value = ''
-    console.log(fileSize(listMemory))
+    media.forEach((m) => {mediaListMemory += m.size})
+    fileMemory.textContent = `${fileSize(mediaListMemory)}/5GB`
+    console.log(fileSize(mediaListMemory))
 }
 
 
-
-function videoObjectCreator(file)
+function fileSizeChecker(file, func)
 {
-    let videoChunks = []
+    if(file.size > 8388608)
+    {
+        let newFile = func(file)
+        return newFile
+    }
+    else
+    {
+        return file
+    }
+}
+
+
+function mediaObjectCreator(file)
+{
+    let mediaChunks = []
     let start = 0
     let chunkSize = (1024 * 1024) * 8
     let end = file.size
@@ -94,11 +121,10 @@ function videoObjectCreator(file)
               chunkEnd = end
           }
           let chunk = new File([file.slice(start,(chunkEnd))],file.name,{type: file.type, test: "yes"})
-          videoChunks.push(chunk)
-          
+          mediaChunks.push(chunk)
           start = start + chunkSize
      }
-    return {videoChunks, type: file.type, name: file.name, numberOfChunks: id, size: file.size}
+    return {mediaChunks: mediaChunks, type: file.type, name: file.name, numberOfChunks: id, size: file.size}
 }
 
 
@@ -106,10 +132,10 @@ function videoObjectCreator(file)
 
 function filterFiles(files, media)
 {
-    for(let i = 0; i < media.length; i++)
-    {
-        files = files.filter((file) => (file.name != media[i].name))
-    }
+   for(let i = 0; i < media.length; i++)
+   {
+    files = files.filter((file) => (file.name != media[i].name))
+   }
    return [...media, ...files]
 }
 
@@ -127,10 +153,14 @@ function generateListItem(file, num)
         <div class="file-size-container">
             <small class="file-size">${fileSize(file.size)}</small>
             <small class="file-type">${file.name.split('.').pop().toUpperCase()}</small>
+            <small class="">Too Large</small>
         </div>`
-    li.classList.add("file-item")
+    li.classList.add("file-item");
+    if(file.size >= 1073741824)
+    {
+        li.classList.add("file-error");
+    }
     li.id = `${num}`
-    listMemory += file.size
     return li
 }
 
@@ -165,6 +195,10 @@ function createThumbnail(file)
 {
     let img = document.createElement("img")
     if(file.type.startsWith("video"))
+    {
+        img.src = block
+    }
+    else if(file.type.startsWith("image") && file.size >= 8388608)
     {
         img.src = block
     }
@@ -215,7 +249,7 @@ fileUploadBox.addEventListener("dragover", (e) => {
 fileUploadBox.addEventListener("dragleave", (e) => {
     e.preventDefault()
     fileUploadBox.classList.remove("active")
-     fileUploadBox.querySelector(".file-instructions").textContent = "Drag file here or"
+    fileUploadBox.querySelector(".file-instructions").textContent = "Drag file here or"
 })
 
 
@@ -281,7 +315,11 @@ formSubmit.addEventListener("click", async (e) => {
         debugger
         for (const [index,file] of media.entries()) {
 
-            if(file.type.startsWith("image"))
+            if(file.size >= 2147483648)
+            {
+                continue
+            }
+            if(file.size < 8388608)
             { 
               let res = await passKeyCheck(uploadData, smallUpload, file)
               if(!res)
@@ -290,7 +328,7 @@ formSubmit.addEventListener("click", async (e) => {
               }
               uploadData = res
             }
-            if(file.type.startsWith("video"))
+            if(file.size >= 8388608)
             {  
               let res = await passKeyCheck(uploadData, largeFileUpload, file)
               if(!res)
@@ -442,7 +480,7 @@ async function largeFileUpload(largeFile)
     } catch (error) {
         return {data: largeFile.name, success: false, error: error, passKeyFailed: passKeyFailed}
     }
-    for (const [index,chunk] of largeFile.videoChunks.entries()) {
+    for (const [index,chunk] of largeFile.mediaChunks.entries()) {
         let formData = new FormData();
         formData.append("passkey",passkey.value)
         formData.append("partNumber", index+1)
