@@ -64,21 +64,31 @@ app.post("/startMultipartUpload", async (req, res) => {
     let acceptedPasskey = token == process.env.PASSKEY
     if(acceptedPasskey)
     {
-    console.log("/////////////////////////////////////////////// START //////////////////////////////////////////////////////")
-        let key = req.body.name
-        const bucketName = process.env.BUCKET_NAME
+        let size = req.body.size
+        //2147483648
+        if(size < 22 && size != undefined)
+        {
+            console.log("/////////////////////////////////////////////// START //////////////////////////////////////////////////////")
+            let key = req.body.name
+            const bucketName = process.env.BUCKET_NAME
 
-        const params = {
+            const params = {
             Bucket: bucketName,
             Key: key,
-        }
+            }
 
-        const command = new CreateMultipartUploadCommand(params)
-        try {
-            const multipartUpload = await s3.send(command);
-            res.status(200).json({message: `Files were successfully uploaded`, data: "", uploadId: multipartUpload.UploadId})
-        } catch (error) {
-            res.status(503).json({message: `Files failed to uploaded`})
+            const command = new CreateMultipartUploadCommand(params)
+            try {
+                const multipartUpload = await s3.send(command);
+                res.status(200).json({message: `Files were successfully uploaded`, data: "", uploadId: multipartUpload.UploadId})
+            } catch (error) {
+                res.status(503).json({message: `Files failed to uploaded`})
+            }
+
+        }
+        else
+        {
+            res.status(413).json({message: `File too large`})
         }
         
     }

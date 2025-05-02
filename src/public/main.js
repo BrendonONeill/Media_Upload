@@ -6,7 +6,9 @@ const filesList = document.querySelector(".file-list");
 let formSubmit = document.querySelector("#form-submit");
 const passkey = document.querySelector("#passkey");
 const notify = document.querySelector(".notify");
+const notifyError = document.querySelector(".notify-error");
 const notifyText = document.querySelector(".update");
+const notifyErrorText = document.querySelector(".update-error");
 const notifyButton = document.querySelector(".notify-button")
 const loadingBG = document.querySelector(".loading-bg");
 const addFilesButton = document.querySelector(".add-files-button")
@@ -23,6 +25,9 @@ let TempListMemory = 0
 // array of media
 let media = [];
 let tempMedia = []
+
+//upload results
+let globalUploadData = []
 
 //when
 fileBrowserInput.addEventListener("change", (e) => handleFiles(e.target.files))
@@ -145,7 +150,7 @@ function generateListItem(file, num)
     li.innerHTML = `
         <div class="file-image"></div>
         <div class="file-details">
-            <small class="file-name">${nameCleanUp(file.name)}</small>
+            <small class="file-name" data-name='${file.name}'>${nameCleanUp(file.name)}</small>
         </div>
         <div class="cancel-button-container">
             <button class="cancel-button" id="photoId-${num}"></button>
@@ -265,7 +270,7 @@ function removeFromList(data)
         console.log(data, itemText)
         for(let i= 0; i < data.length; i++)
         {
-            if(data[i].data == itemText.textContent)
+            if(data[i].data === itemText.dataset.name && data[i].success == true)
             {
                 console.log(item)
                 item.remove()
@@ -273,7 +278,7 @@ function removeFromList(data)
         }
     })
     media = filterMedia(data, media)
-    console.log(media)
+    console.log(" Im here: ",media)
     filesCount.textContent = `${media.length}/20 files`
 }
 
@@ -285,8 +290,7 @@ function filterMedia(data, media)
     {
         for(let j = 0; j < media.length; j++)
         {
-            console.log(data[i].data, " = ", media[j].name)
-            if(data[i].data == media[j].name)
+            if(data[i].data == media[j].name && data[i].success === true)
             {
                 media[j] = {name: ""}
                 break
@@ -337,12 +341,13 @@ formSubmit.addEventListener("click", async (e) => {
               }
               uploadData = res
             }
-
             progressBar.style.width = `${Math.round(((index+1)/media.length)*100)}%` 
             loadingUpdating.textContent = `Uploading... ${index+1}/${media.length}`
         }
+        globalUploadData = uploadData
         removeFromList(uploadData)
         successfulFlashCard(uploadData)
+        handleFiles([])
         return
     }
     else
@@ -367,33 +372,21 @@ async function passKeyCheck(uploadData,fn,file)
        }
 }
 
-
-// posting to server
-async function postingData(formData)
-{
-    
-    let res = await fetch("http://localhost:3000/uploadmedias3",{ method: "POST",body: formData, headers: {Authorization: `Bearer ${passkey.value}`}})
-    if(!res.ok)
-    {
-        let obj = await res.json()
-        errorFlashCard(obj)
-        return
-    }
-    let obj = await res.json()
-    successfulFlashCard(obj)    
-}
-
 function errorFlashCard(obj)
 {
-        notify.classList.remove("notify-hide")
+        let count = 0
+        for(let i = 0; i < obj.length; i++)
+        {
+            if(obj[i].success != true)
+            {
+                count++
+            }
+        }
+        notifyError.classList.remove("notify-hide")
         loadingBG.classList.add("notify-hide");
-        notifyText.textContent = obj.message
-        notify.style.background = "#FBEFEB"
-        notify.style.border = "2px solid #FC5758"
-        
-        setTimeout(() => {
-            notify.classList.add("notify-hide");
-        },5000)
+        notifyErrorText.textContent = `${count}/${obj.length} files failed.`
+        notifyError.style.background = "#FBEFEB"
+        notifyError.style.border = "2px solid #FC5758"
 }
 
 function successfulFlashCard(obj)
@@ -410,18 +403,19 @@ function successfulFlashCard(obj)
     loadingBG.classList.add("notify-hide");
     notify.style.background = "#F1F8F4"
     notify.style.border = "2px solid #50dc6c"
-    notifyText.textContent = `${count}/${obj.length} files upload successfully.`
+    notifyText.textContent = `${count}/${obj.length} files uploaded successfully.`
     setTimeout(() => {
         if(!notify.classList.contains("notify-hide"))
         {
-            notify.classList.add("notify-hide");
+            notify.classList.add("notify-hide")
+            errorFlashCard(obj)
         }
-    },20000)
+    },15000)
 }
 
 notifyButton.addEventListener("click", (e) => {
     e.preventDefault()
-    notify.classList.add("notify-hide");
+    errorFlashCard(globalUploadData)
 })
 
 
@@ -462,7 +456,7 @@ async function largeFileUpload(largeFile)
     }
     let uploadId = null
     try {
-        let startres = await fetch("http://localhost:3000/startMultipartUpload",{ method: "POST",body: JSON.stringify({name:`${largeFile.name}`}), headers: {Authorization: `Bearer ${passkey.value}`, "Content-Type": "application/json"}})
+        let startres = await fetch("http://localhost:3000/startMultipartUpload",{ method: "POST",body: JSON.stringify({name:`${largeFile.name}`, size:largeFile.size}), headers: {Authorization: `Bearer ${passkey.value}`, "Content-Type": "application/json"}})
         if(startres.ok)
         {
             let {uploadId: id} = await startres.json()
@@ -478,6 +472,7 @@ async function largeFileUpload(largeFile)
             throw new Error(error.message)
         }    
     } catch (error) {
+        console.error(error)
         return {data: largeFile.name, success: false, error: error, passKeyFailed: passKeyFailed}
     }
     for (const [index,chunk] of largeFile.mediaChunks.entries()) {
