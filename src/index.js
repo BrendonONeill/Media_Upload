@@ -65,8 +65,7 @@ app.post("/startMultipartUpload", async (req, res) => {
     if(acceptedPasskey)
     {
         let size = req.body.size
-        //2147483648
-        if(size < 22 && size != undefined)
+        if(size < 2147483648 && size != undefined)
         {
             console.log("/////////////////////////////////////////////// START //////////////////////////////////////////////////////")
             let key = req.body.name
