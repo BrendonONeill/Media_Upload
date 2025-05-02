@@ -1,22 +1,22 @@
 # Wedding Upload
-- Need to clean up UI on all screens.
-- Fix error handling.
-- sort something out for videos
+
+## Working on completed
+- change code to say small video/images and large video/images [x]
+- size limiting client side [x]
+- On abortion still runs other chunks need a hard stop [x]
 
 
-# steps
-- chunk video
-- call bucket and start multipart upload
-- convert blobs to buffer and upload
-- call complete multipart upload
+## Working on in progress
+- size limiting server side []
+- fix how I handle errors []
+- video thumbnail redesign and thumbnail screengrab []
+- fix focus bug []
+- clean up upload ui loading []
+- didn't remove file from list after upload []
 
-## Working on
-- add indexedDB
+## Working on not sure
 - Filter broken with one image and need to deal with success and failure
-- On abortion still runs other chunks need a hard stop
 - The notification tab will have a close button that if an error occurs, will show an error tab with more information.
-- Need to download and change files
-- Clean up loading UI 
 
 ## Testing
 - need to test everything to make sure it works. 
