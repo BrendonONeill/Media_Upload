@@ -15,8 +15,30 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 app.use(express.static(__dirname + '/public'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors())
-app.options('*', cors());
+
+var whitelist = ["http://localhost:3000"]
+
+const  corsOptions = {
+    origin: function (origin, callback){
+        console.log("Origin:", origin)
+
+        if(whitelist.indexOf(origin) !== -1 || origin === undefined)
+        {
+            console.log("passed cors....")
+            callback(null,true);
+        }
+        else
+        {
+            callback(new Error("Not allowed by CORS"));
+        }
+    },
+    method: ['GET','POST'],
+    credential: true
+};
+
+app.options('*', cors(corsOptions));
+app.use(cors(corsOptions))
+
 
 app.post("/smalluploads3", upload.single('file'), async (req, res) => {
 

@@ -367,24 +367,31 @@ async function passKeyCheck(uploadData,fn,file)
         uploadData.push(returnedValue)
         return uploadData
        } catch (error) {
-        errorFlashCard({message: error.message})
+        errorFlashCard({message: error.message,wrongKey: true})
         return
        }
 }
 
 function errorFlashCard(obj)
 {
-        let count = 0
-        for(let i = 0; i < obj.length; i++)
+        if(obj.wrongKey !== true)
         {
-            if(obj[i].success != true)
+            let count = 0
+            for(let i = 0; i < obj.length; i++)
             {
-                count++
+                if(obj[i].success != true)
+                {
+                    count++
+                }
             }
+            notifyErrorText.textContent = `${count}/${obj.length} files failed.`
+        }
+        else
+        {
+            notifyErrorText.textContent = `${obj.message}`
         }
         notifyError.classList.remove("notify-hide")
         loadingBG.classList.add("notify-hide");
-        notifyErrorText.textContent = `${count}/${obj.length} files failed.`
         notifyError.style.background = "#FBEFEB"
         notifyError.style.border = "2px solid #FC5758"
 }
