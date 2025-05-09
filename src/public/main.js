@@ -16,6 +16,8 @@ const loadingUpdating = document.querySelector(".loading-updater")
 const block = "/video.svg"
 const progressBar = document.querySelector(".progress-bar")
 const fileMemory = document.querySelector(".files-memory")
+let id = ""
+
 
 let listMemory = 0
 
@@ -431,6 +433,7 @@ async function smallUpload(smallFile)
     let formData = new FormData();
     formData.append("passkey",passkey.value)
     formData.append("file", smallFile);
+    formData.append("id", id)
     let passKeyFailed = false
     
     try {
@@ -562,9 +565,20 @@ async function abortMultiPartUpload(uploadId, key)
     }
 }
 
+async function getID() {
+    const userId = localStorage.getItem('id');
+    if (userId) {
+        id = userId;
+    } else {
+        const res = await fetch("/idgen");
+        const data = await res.json();
+        localStorage.setItem("id", data.id);
+        id = data.id;
+    }
+}
 
 
-
+getID()
 
 
 

@@ -8,12 +8,15 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { PutObjectCommand, CreateMultipartUploadCommand, UploadPartCommand, CompleteMultipartUploadCommand, AbortMultipartUploadCommand } from "@aws-sdk/client-s3";
 import { s3 } from "./util/aws.js";
 import upload from "./util/multer.js";
+import fileAndKeyValidator from "./util/fileValidator.js";
+import errorHandler from "./util/errorHandler.js";
+import { v4 as uuidv4 } from 'uuid';
 
 const app = express()
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 app.use(express.static(__dirname + '/public'));
-app.use(express.json());
+app.use(express.json({ limit: '1kb' }));
 app.use(express.urlencoded({ extended: true }));
 
 var whitelist = ["http://localhost:3000"]
@@ -40,93 +43,107 @@ app.options('*', cors(corsOptions));
 app.use(cors(corsOptions))
 
 
+app.get("/", (req,res) => { 
+    const __dirname = dirname(fileURLToPath(import.meta.url));
+    res.sendFile(join(__dirname, 'index.html'));
+});
+
+
+app.get("/idgen", (req,res) => {
+    let uuid = uuidv4()
+    const id = uuid.slice(0,6)
+    res.status(200).json({id})
+})
+
+
+
 app.post("/smalluploads3", upload.single('file'), async (req, res) => {
+ 
+    try {
+       console.log("/////////////////////////////////////////////// SMALL Started //////////////////////////////////////////////////////")
+       console.log(req.body)
+       let err = fileAndKeyValidator(req, "single")
+       if(err)
+       {
+        throw err
+       }
 
-    let token  = req.headers.authorization.slice(7,)
-    let acceptedPasskey = token == process.env.PASSKEY
-    if(acceptedPasskey)
-    {
-        console.log("/////////////////////////////////////////////// SMALL //////////////////////////////////////////////////////")
-        const bucketName = process.env.BUCKET_NAME
+       const bucketName = process.env.BUCKET_NAME
 
-        const params = {
+       const params = {
             Bucket: bucketName,
-            Key: req.file.originalname,
+            Key: `${req.body.id}-${req.file.originalname}`,
             ContentType: req.file.mimetype
+       }
+       const command = new PutObjectCommand(params);
+
+       let url = await getSignedUrl(s3,command, {expiresIn: 3600 })
+       if(!url)
+        {
+            throw new Error("wasn't able to get presigned url");
         }
-        const command = new PutObjectCommand(params);
-        try {
-            let url = await getSignedUrl(s3,command, {expiresIn: 3600 })
-            if(!url)
-            {
-                throw new Error("wasn't able to get presigned url");
-            }
-            let a = await fetch(url,{method: 'PUT', body: req.file.buffer, headers: { 'Content-Type':req.file.mimetype}})
-            if(!a.ok)
-            {
-                throw new Error("wasn't able to upload file")
-            }
-            res.status(200).json({message: `Files were successfully uploaded`});
-            
-        } catch (error) {
-            console.log(error)
-            res.status(400).json({error, message: "failed to upload file"})
-        }  
-    }
-    else
-    {
-        res.status(401).json({error:"access was denied", message: "Passkey was incorrect.", passKeyFailed: "true"})
+        let a = await fetch(url,{method: 'PUT', body: req.file.buffer, headers: { 'Content-Type':req.file.mimetype}})
+        if(!a.ok)
+        {
+            throw new Error("wasn't able to upload file")
+        }
+        console.log("/////////////////////////////////////////////// SMALL Uploaded //////////////////////////////////////////////////////")
+        res.status(200).json({message: `Files were successfully uploaded`});
+    } catch (error) {
+        let returnErr = errorHandler(error) // need to sort out
+        res.status(error.status).json(error)
     }
 })
 
 
+
+
+
+
 app.post("/startMultipartUpload", async (req, res) => {
+    try {
+       console.log("/////////////////////////////////////////////// START MULTIPART //////////////////////////////////////////////////////")
+       let err = fileAndKeyValidator(req, "multipartStart")
+       if(err)
+       {
+        throw err
+       }
 
-    let token  = req.headers.authorization.slice(7,)
-    let acceptedPasskey = token == process.env.PASSKEY
-    if(acceptedPasskey)
-    {
-        let size = req.body.size
-        if(size < 2147483648 && size != undefined)
-        {
-            console.log("/////////////////////////////////////////////// START //////////////////////////////////////////////////////")
-            let key = req.body.name
-            const bucketName = process.env.BUCKET_NAME
+        let key = req.body.name
+        const bucketName = process.env.BUCKET_NAME
 
-            const params = {
+        const params = {
             Bucket: bucketName,
             Key: key,
-            }
+        }
 
-            const command = new CreateMultipartUploadCommand(params)
-            try {
-                const multipartUpload = await s3.send(command);
-                res.status(200).json({message: `Files were successfully uploaded`, data: "", uploadId: multipartUpload.UploadId})
-            } catch (error) {
-                res.status(503).json({message: `Files failed to uploaded`})
-            }
-
+        const command = new CreateMultipartUploadCommand(params)
+        const multipartUpload = await s3.send(command);
+        if(multipartUpload['$metadata'].httpStatusCode === 200)
+        {
+            res.status(200).json({message: `Files were successfully uploaded`, data: "", uploadId: multipartUpload.UploadId})
         }
         else
         {
-            res.status(413).json({message: `File too large`})
+            let err = new Error("Files failed to uploaded")
+            err.status = 503
+            throw err
         }
-        
-    }
-    else
-    {
-        res.status(401).json({error:"access was denied", message: "Passkey was incorrect.", passKeyFailed: "true"})
+    } catch (error) {
+        let returnErr = errorHandler(error) // need to sort out
+        res.status(error.status).json(error)
     }
 })
 
 
 app.post("/uploadpartss3", upload.single('file'), async (req, res) => {
-    let token  = req.headers.authorization.slice(7,)
-    let acceptedPasskey = token == process.env.PASSKEY
-    if(acceptedPasskey)
-    {
-
-        console.log("/////////////////////////////////////////////// MIDDLE //////////////////////////////////////////////////////")
+    try {
+        console.log("/////////////////////////////////////////////// MULTIPART Upload //////////////////////////////////////////////////////")
+        let err = fileAndKeyValidator(req, "multipart")
+        if(err)
+        {
+            throw err
+        }
         const bucketName = process.env.BUCKET_NAME
 
         const params = {
@@ -138,34 +155,40 @@ app.post("/uploadpartss3", upload.single('file'), async (req, res) => {
         
         const command = new UploadPartCommand(params)
 
-        try {
-            let url = await getSignedUrl(s3,command, {expiresIn: 3600 })
-            if(!url)
-            {
-                throw new Error("wasn't able to get presigned url");
-            }
-            let resa = await fetch(url,{method: 'PUT', body: req.file.buffer, headers: { 'Content-Type':req.file.mimetype}})
+        let url = await getSignedUrl(s3,command, {expiresIn: 3600 })
+        if(!url)
+        {
+            let err =  new Error("wasn't able to get presigned url");
+            err.status = 503
+            throw err
+        }
+        let resa = await fetch(url,{method: 'PUT', body: req.file.buffer, headers: { 'Content-Type':req.file.mimetype}})
+        if(resa.status === 200)
+        {
             const Etag = resa.headers.get('ETag')
             res.status(200).json({message: `Files were successfully uploaded`, data: "", Etag})
-            
-        } catch (error) {
-            res.status(400).json({error, message: "failed to upload"})
-        }  
-        
+        }
+        else
+        {
+            let err =  new Error("failed to upload");
+            err.status = 400
+            throw err
+        }
+    } catch (error) {
+        let returnErr = errorHandler(error) // need to sort out
+        res.status(error.status).json(error)
     }
-    else
-    {
-        res.status(401).json({error:"access was denied", message: "Passkey was incorrect.", passKeyFailed: "true"})
-    }
-    
 })
 
+
 app.post("/finishMultipartUpload", upload.single('file'), async (req, res) => {
-    let token  = req.headers.authorization.slice(7,)
-    let acceptedPasskey = token == process.env.PASSKEY
-    if(acceptedPasskey)
-    {
-        console.log("/////////////////////////////////////////////// END //////////////////////////////////////////////////////")
+    try {
+        console.log("/////////////////////////////////////////////// MULTIPART End //////////////////////////////////////////////////////")
+        let err = fileAndKeyValidator(req, "multipartEnd")
+        if(err)
+        {
+            throw err
+        }
         let Parts = []
         for(let i = 0; i < req.body.ETag.length; i++)
         {
@@ -181,16 +204,56 @@ app.post("/finishMultipartUpload", upload.single('file'), async (req, res) => {
     
         const command = new CompleteMultipartUploadCommand(params);
 
-        try {
-            let g = await s3.send(command)
+        let resa = await s3.send(command)
+        if(resa['$metadata'].httpStatusCode === 200)
+        {
             res.status(200).json({message: `Files were successfully uploaded`})
-        } catch (error) {
-            res.status(501).json({message: `File failed to upload`})
         }
+        else
+        {
+            let err =  new Error("failed to upload file");
+            err.status = 501
+            throw err
+        }
+        
+
+
+    } catch (error) {
+        let returnErr = errorHandler(error) // need to sort out
+        res.status(error.status).json(error)
     }
-    else
-    {
-        res.status(401).json({error:"access was denied", message: "Passkey was incorrect.", passKeyFailed: "true"})
+})
+
+app.post("/abortMultipartUpload", upload.single('file'), async (req, res) => {
+    try {
+        console.log("/////////////////////////////////////////////// MULTIPART Aborted //////////////////////////////////////////////////////")
+        let err = fileAndKeyValidator(req, "multipartEnd")
+        if(err)
+        {
+            throw err
+        }
+        const bucketName = process.env.BUCKET_NAME
+        const params = {
+            Bucket: bucketName,
+            Key: req.body.name,
+            UploadId: req.body.uploadId,
+        }
+    
+        const command = new AbortMultipartUploadCommand(params);
+
+        let resa = await s3.send(command)
+        if(resa['$metadata'].httpStatusCode === 204){
+            res.status(204).json({message: `MultipartUpload was aborted`, data: ""})
+        }
+        else
+        {
+            let err = new Error("Abort failed")
+            err.status = 500
+            throw err
+        }
+    } catch (error) {
+        let returnErr = errorHandler(error) // need to sort out
+        res.status(error.status).json(error)
     }
 })
 
@@ -214,17 +277,26 @@ app.post("/abortMultipartUpload", upload.single('file'), async (req, res) => {
     }
     else
     {
-        res.status(401).json({error:"access was denied",message: "Passkey was incorrect, Please try again.", noKey: "true"})
+        res.status(401).json({error:"access was denied",message: "Passkey was incorrect, Please try again.", passKeyFailed: "true"})
     }
 })
 
 
-app.get("/showfile", (req,res) => { 
-    const __dirname = dirname(fileURLToPath(import.meta.url));
-    res.sendFile(join(__dirname, 'index.html'));
-});
+app.use((err,req,res,next) => {
+  console.error('An error occurred:');
+  console.error('Status:', err.status);
+  console.error('Message:', err.message);
 
-
+  if(err.status === 413)
+  {
+    res.status(413).json({error:"Media was too large", message: "Media was too large", passKeyFailed: "false"});
+  }
+  if(err.status === 415)
+  {
+      res.status(415).json({error:err.message, message: err.message, passKeyFailed: "false"});
+  }
+  next()
+})
 
 
 app.listen("3000" ,() =>{
