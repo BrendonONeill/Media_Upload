@@ -238,7 +238,6 @@ filesList.addEventListener("click", (e) => {
     }
 })
 
-
 // drag and drop functions
 fileUploadBox.addEventListener("drop", (e) => {
     e.preventDefault()
@@ -258,11 +257,6 @@ fileUploadBox.addEventListener("dragleave", (e) => {
     fileUploadBox.classList.remove("active")
     fileUploadBox.querySelector(".file-instructions").textContent = "Drag file here or"
 })
-
-
-
-
-
 
 function removeFromList(data)
 {
@@ -309,7 +303,7 @@ formSubmit.addEventListener("click", async (e) => {
     e.preventDefault()
     if(media.length == 0)
     {
-        errorFlashCard({message: "No Files were added"})
+        errorFlashCard({message: "No Files were added",nofiles: true})
         return
     }
     if(passkey.value != "")
@@ -354,7 +348,7 @@ formSubmit.addEventListener("click", async (e) => {
     }
     else
     {
-        errorFlashCard({message:"Passkey wasn't entered."})
+        errorFlashCard({message:"Passkey wasn't entered.", wrongKey: true})
     }    
 })
 
@@ -376,7 +370,12 @@ async function passKeyCheck(uploadData,fn,file)
 
 function errorFlashCard(obj)
 {
-        if(obj.wrongKey !== true)
+    console.log(obj)
+        if(obj.nofiles == true)
+        {
+            notifyErrorText.textContent = `${obj.message}`
+        }
+        else if(obj.wrongKey !== true)
         {
             let count = 0
             for(let i = 0; i < obj.length; i++)
@@ -460,21 +459,80 @@ async function smallUpload(smallFile)
 async function largeFileUpload(largeFile)
 {
     let passKeyFailed = false
+    let error = null
+    let errorObj = null
     const chunkData= {
         ETag: [],
         PartNumber: []
     }
     let uploadId = null
+try {
+   let returnObj = await startMultipartUpload(largeFile, passKeyFailed)
+   uploadId = returnObj.uploadId
+   passKeyFailed = returnObj.passKeyFailed
+   error = returnObj.error
+   errorObj = returnObj.errorObj
+   
+
+   if(error)
+   {
+    throw error
+   }
+
+   console.log("====test====")
+
+   returnObj = await partsMultipartUpload(largeFile, uploadId, passKeyFailed)
+
+   chunkData.ETag = returnObj.chunkData.ETag
+   chunkData.PartNumber = returnObj.chunkData.PartNumber
+   passKeyFailed = returnObj.passKeyFailed
+   error = returnObj.error
+   errorObj = returnObj.errorObj
+   
+   if(error)
+   {
+    throw error
+   }
+
+   returnObj = await finishMultipartUpload(largeFile,uploadId,chunkData,passKeyFailed)
+
+   let complete = returnObj.uploaded
+   passKeyFailed = returnObj.passKeyFailed
+   error = returnObj.error
+   errorObj = returnObj.errorObj
+
+   if(error)
+   {
+    throw error
+   }
+
+   return complete
+
+} catch (error) {
+    return errorObj       
+}
+
+   
+}
+
+
+async function startMultipartUpload(largeFile, passKeyFailed)
+{
+    const returnObj = {}
     try {
-        let startres = await fetch("http://localhost:3000/startMultipartUpload",{ method: "POST",body: JSON.stringify({name:`${largeFile.name}`, size:largeFile.size}), headers: {Authorization: `Bearer ${passkey.value}`, "Content-Type": "application/json"}})
+        let startres = await fetch("http://localhost:3000/startMultipartUpload",{ method: "POST",body: JSON.stringify({name:`${largeFile.name}`, size:largeFile.size,id:id}), headers: {Authorization: `Bearer ${passkey.value}`, "Content-Type": "application/json"}})
         if(startres.ok)
         {
             let {uploadId: id} = await startres.json()
-            uploadId = id
+            returnObj.uploadId =  id
+            returnObj.passKeyFailed = false
+            returnObj.error = returnObj.errorObj = null
+            return returnObj
         }
         else
         {
             let error = await startres.json()
+            console.info("-----------",error)
             if(error.passKeyFailed)
             {
                 passKeyFailed = true
@@ -482,9 +540,21 @@ async function largeFileUpload(largeFile)
             throw new Error(error.message)
         }    
     } catch (error) {
-        console.error(error)
-        return {data: largeFile.name, success: false, error: error, passKeyFailed: passKeyFailed}
+        console.log(error)
+        returnObj.error = error
+        returnObj.passKeyFailed = true
+        returnObj.errorObj = {data: largeFile.name, success: false, error: error, passKeyFailed: passKeyFailed}
+        return returnObj
     }
+}
+
+async function partsMultipartUpload(largeFile, uploadId, passKeyFailed)
+{
+    const chunkData= {
+        ETag: [],
+        PartNumber: []
+    }
+    const returnObj = {}
     for (const [index,chunk] of largeFile.mediaChunks.entries()) {
         let formData = new FormData();
         formData.append("passkey",passkey.value)
@@ -492,6 +562,7 @@ async function largeFileUpload(largeFile)
         formData.append("file", chunk);
         formData.append("name",largeFile.name)
         formData.append("uploadId", uploadId)
+        formData.append("id", id)
         try {
             let res = await fetch("http://localhost:3000/uploadpartss3",{ method: "POST",body: formData, headers: {Authorization: `Bearer ${passkey.value}`}})
             if(res.ok)
@@ -512,13 +583,24 @@ async function largeFileUpload(largeFile)
         } catch (error) {
             
             abortMultiPartUpload(uploadId, largeFile.name)
-            return {data: largeFile.name, success: false, error: error, passKeyFailed: passKeyFailed}
+            returnObj.error = error
+            returnObj.errorObj = {data: largeFile.name, success: false, error: error, passKeyFailed: passKeyFailed}
+            return returnObj
         }
     }
+    returnObj.chunkData = chunkData
+    returnObj.passKeyFailed = false
+    returnObj.error = returnObj.errorObj = null
+    return returnObj
+}
 
+async function finishMultipartUpload(largeFile,uploadId,chunkData, passKeyFailed)
+{
+    const returnObj = {}
     let formData = new FormData();
     formData.append("name",largeFile.name)
     formData.append("uploadId", uploadId)
+    formData.append("id", id)
     chunkData.ETag.forEach(e => formData.append("ETag", e))
     chunkData.PartNumber.forEach(p => formData.append("PartNumber", p))
     try {
@@ -526,7 +608,10 @@ async function largeFileUpload(largeFile)
         if(endres.ok)
         {
            await endres.json()
-           return {data: largeFile.name, success: true}
+           returnObj.uploaded = {data: largeFile.name, success: true} 
+           returnObj.passKeyFailed = false
+           returnObj.error = returnObj.errorObj = null
+           return returnObj
         }
         else
         {
@@ -539,7 +624,9 @@ async function largeFileUpload(largeFile)
         }
     } catch (error) {
         abortMultiPartUpload(uploadId, largeFile.name)
-        return {data: largeFile.name, success: false, error: error}
+        returnObj.error = error
+        returnObj.errorObj = {data: largeFile.name, success: false, error: error, passKeyFailed: passKeyFailed}
+        return returnObj
     }
 }
 
@@ -548,6 +635,7 @@ async function abortMultiPartUpload(uploadId, key)
 {
     let formData = new FormData();
     formData.append("name",key)
+    formData.append("id",id)
     formData.append("uploadId", uploadId)
     try {
         let res = await fetch("http://localhost:3000/abortMultipartUpload",{ method: "POST",body: formData, headers: {Authorization: `Bearer ${passkey.value}`}})

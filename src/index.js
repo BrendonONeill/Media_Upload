@@ -35,12 +35,11 @@ const  corsOptions = {
             callback(new Error("Not allowed by CORS"));
         }
     },
-    method: ['GET','POST'],
-    credential: true
+    //method: ['GET','POST'],
+    //credential: true
 };
 
 app.options('*', cors(corsOptions));
-app.use(cors(corsOptions))
 
 
 app.get("/", (req,res) => { 
@@ -57,7 +56,7 @@ app.get("/idgen", (req,res) => {
 
 
 
-app.post("/smalluploads3", upload.single('file'), async (req, res) => {
+app.post("/smalluploads3",cors(corsOptions), upload.single('file'), async (req, res) => {
  
     try {
        console.log("/////////////////////////////////////////////// SMALL Started //////////////////////////////////////////////////////")
@@ -91,7 +90,7 @@ app.post("/smalluploads3", upload.single('file'), async (req, res) => {
         res.status(200).json({message: `Files were successfully uploaded`});
     } catch (error) {
         let returnErr = errorHandler(error) // need to sort out
-        res.status(error.status).json(error)
+        res.status(error.status).json({error: error, message: error.message, passKeyFailed: error.passKeyFailed})
     }
 })
 
@@ -114,7 +113,7 @@ app.post("/startMultipartUpload", async (req, res) => {
 
         const params = {
             Bucket: bucketName,
-            Key: key,
+            Key: `${req.body.id}-${key}`,
         }
 
         const command = new CreateMultipartUploadCommand(params)
@@ -131,7 +130,8 @@ app.post("/startMultipartUpload", async (req, res) => {
         }
     } catch (error) {
         let returnErr = errorHandler(error) // need to sort out
-        res.status(error.status).json(error)
+        console.log("should be key", error)
+        res.status(error.status).json({error: error, message: error.message, passKeyFailed: error.passKeyFailed})
     }
 })
 
@@ -148,7 +148,7 @@ app.post("/uploadpartss3", upload.single('file'), async (req, res) => {
 
         const params = {
             Bucket: bucketName,
-            Key: req.body.name,
+            Key: `${req.body.id}-${req.body.name}`,
             UploadId: req.body.uploadId,
             PartNumber: req.body.partNumber,
         }
@@ -176,7 +176,7 @@ app.post("/uploadpartss3", upload.single('file'), async (req, res) => {
         }
     } catch (error) {
         let returnErr = errorHandler(error) // need to sort out
-        res.status(error.status).json(error)
+        res.status(error.status).json({error: error, message: error.message, passKeyFailed: error.passKeyFailed})
     }
 })
 
@@ -197,7 +197,7 @@ app.post("/finishMultipartUpload", upload.single('file'), async (req, res) => {
         const bucketName = process.env.BUCKET_NAME
         const params = {
             Bucket: bucketName,
-            Key: req.body.name,
+            Key: `${req.body.id}-${req.body.name}`,
             UploadId: req.body.uploadId,
             MultipartUpload: { Parts: Parts}
         }
@@ -220,7 +220,7 @@ app.post("/finishMultipartUpload", upload.single('file'), async (req, res) => {
 
     } catch (error) {
         let returnErr = errorHandler(error) // need to sort out
-        res.status(error.status).json(error)
+        res.status(error.status).json({error: error, message: error.message, passKeyFailed: error.passKeyFailed})
     }
 })
 
@@ -235,7 +235,7 @@ app.post("/abortMultipartUpload", upload.single('file'), async (req, res) => {
         const bucketName = process.env.BUCKET_NAME
         const params = {
             Bucket: bucketName,
-            Key: req.body.name,
+            Key: `${req.body.id}-${req.body.name}`,
             UploadId: req.body.uploadId,
         }
     

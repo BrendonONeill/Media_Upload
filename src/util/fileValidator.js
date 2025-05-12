@@ -34,6 +34,7 @@ export default function fileAndKeyValidator(req, action)
     {
         let err = new Error("Passkey was incorrect.")
         err.status = 401
+        err.passKeyFailed = true
         return err
     }
 
