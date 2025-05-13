@@ -436,7 +436,7 @@ async function smallUpload(smallFile)
     let passKeyFailed = false
     
     try {
-        let res = await fetch("http://localhost:3000/smalluploads3",{ method: "POST",body: formData, headers: {Authorization: `Bearer ${passkey.value}`}})
+        let res = await fetch("/smalluploads3",{ method: "POST",body: formData, headers: {Authorization: `Bearer ${passkey.value}`}})
         if(res.ok)
         {
             return {data: smallFile.name, success: true}
@@ -520,7 +520,7 @@ async function startMultipartUpload(largeFile, passKeyFailed)
 {
     const returnObj = {}
     try {
-        let startres = await fetch("http://localhost:3000/startMultipartUpload",{ method: "POST",body: JSON.stringify({name:`${largeFile.name}`, size:largeFile.size,id:id}), headers: {Authorization: `Bearer ${passkey.value}`, "Content-Type": "application/json"}})
+        let startres = await fetch("/startMultipartUpload",{ method: "POST",body: JSON.stringify({name:`${largeFile.name}`, size:largeFile.size,id:id}), headers: {Authorization: `Bearer ${passkey.value}`, "Content-Type": "application/json"}})
         if(startres.ok)
         {
             let {uploadId: id} = await startres.json()
@@ -564,7 +564,7 @@ async function partsMultipartUpload(largeFile, uploadId, passKeyFailed)
         formData.append("uploadId", uploadId)
         formData.append("id", id)
         try {
-            let res = await fetch("http://localhost:3000/uploadpartss3",{ method: "POST",body: formData, headers: {Authorization: `Bearer ${passkey.value}`}})
+            let res = await fetch("/uploadpartss3",{ method: "POST",body: formData, headers: {Authorization: `Bearer ${passkey.value}`}})
             if(res.ok)
             {
                 let data = await res.json();
@@ -604,7 +604,7 @@ async function finishMultipartUpload(largeFile,uploadId,chunkData, passKeyFailed
     chunkData.ETag.forEach(e => formData.append("ETag", e))
     chunkData.PartNumber.forEach(p => formData.append("PartNumber", p))
     try {
-        let endres = await fetch("http://localhost:3000/finishMultipartUpload",{ method: "POST",body: formData, headers: {Authorization: `Bearer ${passkey.value}`}})
+        let endres = await fetch("/finishMultipartUpload",{ method: "POST",body: formData, headers: {Authorization: `Bearer ${passkey.value}`}})
         if(endres.ok)
         {
            await endres.json()
@@ -638,7 +638,7 @@ async function abortMultiPartUpload(uploadId, key)
     formData.append("id",id)
     formData.append("uploadId", uploadId)
     try {
-        let res = await fetch("http://localhost:3000/abortMultipartUpload",{ method: "POST",body: formData, headers: {Authorization: `Bearer ${passkey.value}`}})
+        let res = await fetch("/abortMultipartUpload",{ method: "POST",body: formData, headers: {Authorization: `Bearer ${passkey.value}`}})
         if(res.ok)
         {
             await endres.json()
