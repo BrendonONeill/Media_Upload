@@ -1,8 +1,8 @@
 services:
   app:
-   build: .
-   image: upload-aws:latest
-   ports:
-    - "3000:3000"
-   env_file:
-    - .env
+    build: .
+    image: upload-aws:latest
+    ports:
+     - "3000:3000"
+    env_file:
+     - .env

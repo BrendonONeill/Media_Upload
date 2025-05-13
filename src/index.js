@@ -1,33 +1,30 @@
+import 'dotenv/config'
 import express from "express"
 import { dirname, join } from 'path';
 import {fileURLToPath} from 'url';
 import cors from 'cors'
-import 'dotenv/config'
-
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { PutObjectCommand, CreateMultipartUploadCommand, UploadPartCommand, CompleteMultipartUploadCommand, AbortMultipartUploadCommand } from "@aws-sdk/client-s3";
-import { s3 } from "./util/aws.js";
 import upload from "./util/multer.js";
 import fileAndKeyValidator from "./util/fileValidator.js";
 import errorHandler from "./util/errorHandler.js";
 import { v4 as uuidv4 } from 'uuid';
+import { s3 } from "./util/aws.js";
 
 const app = express()
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 app.use(express.static(__dirname + '/public'));
-app.use(express.json({ limit: '1kb' }));
+app.use(express.json({}));
 app.use(express.urlencoded({ extended: true }));
 
-var whitelist = ["http://localhost:3000"]
+var whitelist = ["http://kirsty-and-niall.love"]
 
 const  corsOptions = {
     origin: function (origin, callback){
-        console.log("Origin:", origin)
 
-        if(whitelist.indexOf(origin) !== -1 || origin === undefined)
+        if(whitelist.indexOf(origin) !== -1 )
         {
-            console.log("passed cors....")
             callback(null,true);
         }
         else
@@ -35,8 +32,8 @@ const  corsOptions = {
             callback(new Error("Not allowed by CORS"));
         }
     },
-    //method: ['GET','POST'],
-    //credential: true
+    method: ['GET','POST'],
+    credential: true
 };
 
 app.options('*', cors(corsOptions));
@@ -99,7 +96,7 @@ app.post("/smalluploads3",cors(corsOptions), upload.single('file'), async (req, 
 
 
 
-app.post("/startMultipartUpload", async (req, res) => {
+app.post("/startMultipartUpload",cors(corsOptions), async (req, res) => {
     try {
        console.log("/////////////////////////////////////////////// START MULTIPART //////////////////////////////////////////////////////")
        let err = fileAndKeyValidator(req, "multipartStart")
@@ -136,7 +133,7 @@ app.post("/startMultipartUpload", async (req, res) => {
 })
 
 
-app.post("/uploadpartss3", upload.single('file'), async (req, res) => {
+app.post("/uploadpartss3",cors(corsOptions), upload.single('file'), async (req, res) => {
     try {
         console.log("/////////////////////////////////////////////// MULTIPART Upload //////////////////////////////////////////////////////")
         let err = fileAndKeyValidator(req, "multipart")
@@ -181,7 +178,7 @@ app.post("/uploadpartss3", upload.single('file'), async (req, res) => {
 })
 
 
-app.post("/finishMultipartUpload", upload.single('file'), async (req, res) => {
+app.post("/finishMultipartUpload",cors(corsOptions), upload.single('file'), async (req, res) => {
     try {
         console.log("/////////////////////////////////////////////// MULTIPART End //////////////////////////////////////////////////////")
         let err = fileAndKeyValidator(req, "multipartEnd")
@@ -224,7 +221,7 @@ app.post("/finishMultipartUpload", upload.single('file'), async (req, res) => {
     }
 })
 
-app.post("/abortMultipartUpload", upload.single('file'), async (req, res) => {
+app.post("/abortMultipartUpload",cors(corsOptions), upload.single('file'), async (req, res) => {
     try {
         console.log("/////////////////////////////////////////////// MULTIPART Aborted //////////////////////////////////////////////////////")
         let err = fileAndKeyValidator(req, "multipartEnd")
@@ -257,7 +254,7 @@ app.post("/abortMultipartUpload", upload.single('file'), async (req, res) => {
     }
 })
 
-app.post("/abortMultipartUpload", upload.single('file'), async (req, res) => {
+app.post("/abortMultipartUpload",cors(corsOptions), upload.single('file'), async (req, res) => {
     let token  = req.headers.authorization.slice(7,)
     let acceptedPasskey = token == process.env.PASSKEY
     if(acceptedPasskey)
