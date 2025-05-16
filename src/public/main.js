@@ -160,7 +160,6 @@ function generateListItem(file, num)
         <div class="file-size-container">
             <small class="file-size">${fileSize(file.size)}</small>
             <small class="file-type">${file.name.split('.').pop().toUpperCase()}</small>
-            <small class="">Too Large</small>
         </div>`
     li.classList.add("file-item");
     if(file.size >= 1073741824)

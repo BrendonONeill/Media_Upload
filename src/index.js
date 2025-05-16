@@ -10,6 +10,7 @@ import fileAndKeyValidator from "./util/fileValidator.js";
 import errorHandler from "./util/errorHandler.js";
 import { v4 as uuidv4 } from 'uuid';
 import { s3 } from "./util/aws.js";
+import logger from './util/logging.js';
 
 const app = express()
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -18,7 +19,7 @@ app.use(express.static(__dirname + '/public'));
 app.use(express.json({}));
 app.use(express.urlencoded({ extended: true }));
 
-var whitelist = ["http://kirsty-and-niall.love"]
+var whitelist = ["http://kirsty-and-niall.love", "http://localhost:3000"]
 
 const  corsOptions = {
     origin: function (origin, callback){
@@ -83,10 +84,12 @@ app.post("/smalluploads3",cors(corsOptions), upload.single('file'), async (req, 
         {
             throw new Error("wasn't able to upload file")
         }
+        logger({status: 200, message:"File was successfully uploaded", id:req.body.id, file: req.file.originalname},"main")
         console.log("/////////////////////////////////////////////// SMALL Uploaded //////////////////////////////////////////////////////")
-        res.status(200).json({message: `Files were successfully uploaded`});
+        res.status(200).json({message: `File was successfully uploaded`});
     } catch (error) {
         let returnErr = errorHandler(error) // need to sort out
+        logger({status: error.status, message:error.message, id:req.body.id, file: req.file.originalname},"error")
         res.status(error.status).json({error: error, message: error.message, passKeyFailed: error.passKeyFailed})
     }
 })
