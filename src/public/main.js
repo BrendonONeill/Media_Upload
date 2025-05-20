@@ -640,6 +640,7 @@ async function finishMultipartUpload(largeFile,uploadId,chunkData, passKeyFailed
     formData.append("name",largeFile.name)
     formData.append("uploadId", uploadId)
     formData.append("id", id)
+    formData.append("size",largeFile.size)
     chunkData.ETag.forEach(e => formData.append("ETag", e))
     chunkData.PartNumber.forEach(p => formData.append("PartNumber", p))
     try {

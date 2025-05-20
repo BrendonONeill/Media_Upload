@@ -11,9 +11,9 @@ import errorHandler from "./util/errorHandler.js";
 import { v4 as uuidv4 } from 'uuid';
 import { s3 } from "./util/aws.js";
 import logger from './util/logging.js';
+import { checkDbSize, updateDbSize } from './util/db.js';
 
-import pg from 'pg'
-const { Client } = pg
+
 
 const app = express()
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -22,7 +22,7 @@ app.use(express.static(__dirname + '/public'));
 app.use(express.json({}));
 app.use(express.urlencoded({ extended: true }));
 
-var whitelist = ["http://kirsty-and-niall.love"]
+var whitelist = ["https://kirsty-and-niall.love"]
 
 const  corsOptions = {
     origin: function (origin, callback){
@@ -61,7 +61,7 @@ app.post("/smalluploads3",cors(corsOptions), upload.single('file'), async (req, 
  
     try {
        console.log("/////////////////////////////////////////////// SMALL Started //////////////////////////////////////////////////////")
-       console.log(req.body)
+       console.log(await checkDbSize())
        let err = fileAndKeyValidator(req, "single")
        if(err)
        {
@@ -89,6 +89,7 @@ app.post("/smalluploads3",cors(corsOptions), upload.single('file'), async (req, 
         }
         logger({status: 200, message:"File was successfully uploaded", id:req.body.id, file: req.file.originalname},"main")
         console.log("/////////////////////////////////////////////// SMALL Uploaded //////////////////////////////////////////////////////")
+        await updateDbSize(req.body.id,req.file.size,req.file.originalname)
         res.status(200).json({message: `File was successfully uploaded`});
     } catch (error) {
         let returnErr = errorHandler(error) // need to sort out
@@ -105,6 +106,7 @@ app.post("/smalluploads3",cors(corsOptions), upload.single('file'), async (req, 
 app.post("/startMultipartUpload",cors(corsOptions), async (req, res) => {
     try {
        console.log("/////////////////////////////////////////////// START MULTIPART //////////////////////////////////////////////////////")
+       console.log(await checkDbSize())
        let err = fileAndKeyValidator(req, "multipartStart")
        if(err)
        {
@@ -210,6 +212,7 @@ app.post("/finishMultipartUpload",cors(corsOptions), upload.single('file'), asyn
         let resa = await s3.send(command)
         if(resa['$metadata'].httpStatusCode === 200)
         {
+            await updateDbSize(req.body.id,req.body.size,req.body.name)
             res.status(200).json({message: `Files were successfully uploaded`})
         }
         else
@@ -291,33 +294,7 @@ app.post("/abortMultipartUpload",cors(corsOptions), upload.single('file'), async
 //                                        //
 ////////////////////////////////////////////
 app.get("/db",async (req,res) => {
-const connectionString = `postgresql://${process.env.POSTGRES_USER}:${process.env.POSTGRES_PASSWORD}@db:5432/${process.env.POSTGRES_DB}`
 
- 
-const client = new Client({
-  connectionString,
-})
- 
-await client.connect()
-
-const query = {
-  text: 'SELECT filesize from uploads',
-  values: [],
-  rowMode: 'array',
-}
- 
-const cat = await client.query(query)
-console.log(cat.fields.map(field => field.name))
-let a = cat.rows.flat(2)
-let count = 0 
-for(let i = 0; i < a.length; i++)
-{
- count += a[i]
-}
-console.log(a,count) 
-
-await client.end()
-    res.json("hello")
 })
 
 
