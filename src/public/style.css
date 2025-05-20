@@ -282,6 +282,16 @@ form {
     background-size: cover;
 }
 
+.cancel-button:focus
+{
+    color: red;
+    border-radius: 5px;
+    border: 2px solid #ff0000;
+    background: url("./red-x.svg");
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
 .file-upload-box {
     margin: 20px;
     border-radius: 5px;
@@ -428,11 +438,18 @@ form {
 .upload {
     cursor: pointer;
     padding: 1rem;
-    background-color: #364A3F;
-    color: white;
+    background-color: #FF7367;
+    font-weight: bold;
+    color: rgb(40, 40, 40);
     width: 120px;
     align-self: center;
     border-radius: 5px;
+    border: 2px solid transparent;
+}
+
+.upload:focus,.upload:hover
+{
+    border: 2px solid black;
 }
 
 .loading {
@@ -455,7 +472,7 @@ form {
     font-size: 1.6rem;
 }
 
-.loading-bg {
+.loading-bg,.error-bg {
     display: flex;
     align-items: flex-start;
     justify-content: center;
@@ -484,6 +501,47 @@ form {
     border-radius: 5px;
     background-color: #364A3F;
     transition: all 0.3s linear;
+}
+
+.error-bg
+{
+
+}
+
+.error-list-container
+{
+    background-color: #6E967F;
+    padding: 1rem;
+    width: 90%;
+    max-height: 80%;
+    overflow-y: scroll;
+}
+
+.error-header
+{
+    padding: 1rem;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.error-list-container ul
+{
+    list-style-type: none;
+}
+
+.error-list-container li
+{
+    margin-bottom: 5px;
+}
+
+.error-card
+{
+    padding: 1rem;
+    background-color: whitesmoke;
+    border-radius: 5px;
+    border: 2px solid black;
+    width: 100%;
 }
 
 .notify-hide {

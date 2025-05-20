@@ -6,4 +6,27 @@ services:
      - "3000:3000"
     env_file:
      - .env
+    depends_on:
+      db:
+        condition: service_healthy
     restart: unless-stopped
+
+
+  db:
+    image: postgres:16
+    container_name: my_postgres_db
+    env_file:
+      - .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data 
+      - ./db-init-scripts:/docker-entrypoint-initdb.d 
+    healthcheck:
+      test: ["CMD-SHELL", "sh -c 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local

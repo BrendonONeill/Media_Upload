@@ -10,6 +10,9 @@ const notifyError = document.querySelector(".notify-error");
 const notifyText = document.querySelector(".update");
 const notifyErrorText = document.querySelector(".update-error");
 const notifyButton = document.querySelector(".notify-button")
+const errorcontainerButton = document.querySelector(".error-list-container-button")
+const notifyErrorButton = document.querySelector(".notify-error-button")
+const errorbg = document.querySelector(".error-bg")
 const loadingBG = document.querySelector(".loading-bg");
 const addFilesButton = document.querySelector(".add-files-button")
 const loadingUpdating = document.querySelector(".loading-updater")
@@ -127,7 +130,7 @@ function mediaObjectCreator(file)
           {
               chunkEnd = end
           }
-          let chunk = new File([file.slice(start,(chunkEnd))],file.name,{type: file.type, test: "yes"})
+          let chunk = new File([file.slice(start,(chunkEnd))],file.name,{type: file.type})
           mediaChunks.push(chunk)
           start = start + chunkSize
      }
@@ -162,7 +165,7 @@ function generateListItem(file, num)
             <small class="file-type">${file.name.split('.').pop().toUpperCase()}</small>
         </div>`
     li.classList.add("file-item");
-    if(file.size >= 1073741824)
+    if(file.size >= 2147483648)
     {
         li.classList.add("file-error");
     }
@@ -414,15 +417,53 @@ function successfulFlashCard(obj)
     setTimeout(() => {
         if(!notify.classList.contains("notify-hide"))
         {
+            let errorsFound = false
+            for(let i = 0; i < obj.length; i++)
+            {
+            if(obj[i].success == false)
+            {
+                errorsFound = true
+            }
+    }
             notify.classList.add("notify-hide")
-            errorFlashCard(obj)
+            if(errorsFound)
+            {
+                errorFlashCard(obj)
+            }
         }
     },15000)
 }
 
 notifyButton.addEventListener("click", (e) => {
     e.preventDefault()
-    errorFlashCard(globalUploadData)
+    let errorsFound = false
+    for(let i = 0; i < globalUploadData.length; i++)
+    {
+        if(globalUploadData[i].success == false)
+        {
+            errorsFound = true
+        }
+    }
+    notify.classList.add("notify-hide")
+    if(errorsFound)
+    {
+        errorFlashCard(globalUploadData)
+    }
+})
+
+notifyErrorButton.addEventListener("click", (e) => {
+    e.preventDefault()
+    errorbg.classList.toggle("notify-hide")
+})
+
+errorcontainerButton.addEventListener("click", (e) => {
+    e.preventDefault()
+    errorbg.classList.toggle("notify-hide")
+})
+
+errorbg.addEventListener("click", (e) => {
+    e.preventDefault()
+    errorbg.classList.add("notify-hide")
 })
 
 
@@ -478,7 +519,6 @@ try {
     throw error
    }
 
-   console.log("====test====")
 
    returnObj = await partsMultipartUpload(largeFile, uploadId, passKeyFailed)
 
@@ -669,3 +709,10 @@ getID()
 
 
 
+async function test()
+{
+        const res = await fetch("/db");
+        const data = await res.json();
+}
+
+//test()
