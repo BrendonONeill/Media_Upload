@@ -11,7 +11,7 @@ export default async function logger(data, type)
             console.error('Error writing file:', err);
             return;
         }
-        console.log('File has been written successfully');
+        console.log('Information was logged');
         });
         return
     }
@@ -20,7 +20,7 @@ export default async function logger(data, type)
             console.error('Error writing file:', err);
             return;
         }
-        console.log('File has been written successfully');
+        console.log('Error was logged');
         });
         return
 }
@@ -31,7 +31,7 @@ function generateLog(data)
     const now = new Date();
 
     const day = String(now.getDate()).padStart(2, "0");
-    const month = String(now.getMonth() + 1).padStart(2, "0"); // Month is 0-indexed
+    const month = String(now.getMonth() + 1).padStart(2, "0");
     const year = now.getFullYear();
 
     const hours = String(now.getHours()).padStart(2, "0");

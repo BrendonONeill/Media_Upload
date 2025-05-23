@@ -48,7 +48,6 @@ const handleFiles = ([...files] = []) =>
         {
             break
         }
-        console.log(files[i])
         if(files[i].type.startsWith("image"))
         {
             let file = fileSizeChecker(files[i], mediaObjectCreator)
@@ -97,7 +96,6 @@ const handleFiles = ([...files] = []) =>
     fileBrowserInput.value = ''
     media.forEach((m) => {mediaListMemory += m.size})
     fileMemory.textContent = `${fileSize(mediaListMemory)}/5GB`
-    console.log(fileSize(mediaListMemory))
 }
 
 
@@ -265,18 +263,15 @@ function removeFromList(data)
     const listItems = filesList.querySelectorAll("li")
     listItems.forEach((item) => {
         let itemText = item.querySelector(".file-name")
-        console.log(data, itemText)
         for(let i= 0; i < data.length; i++)
         {
             if(data[i].data === itemText.dataset.name && data[i].success == true)
             {
-                console.log(item)
                 item.remove()
             }
         }
     })
     media = filterMedia(data, media)
-    console.log(" Im here: ",media)
     filesCount.textContent = `${media.length}/20 files`
 }
 
@@ -308,13 +303,18 @@ formSubmit.addEventListener("click", async (e) => {
         errorFlashCard({message: "No Files were added",nofiles: true})
         return
     }
-    if(passkey.value != "")
+    if(passkey.value.trim() != "")
     {
-        console.log(media)
+        let banned = checkIfBanned()
+        if(banned)
+        {
+            errorFlashCard({message:`Try again at ${banned}`, wrongKey: true})
+            return  
+        }
         loadingUpdating.textContent = `Uploading... ${0}/${media.length}`
         let uploadData = []
         loadingBG.classList.remove("notify-hide")
-        debugger
+        notifyError.classList.add("notify-hide")
         for (const [index,file] of media.entries()) {
 
             if(file.size >= 2147483648)
@@ -345,6 +345,8 @@ formSubmit.addEventListener("click", async (e) => {
         globalUploadData = uploadData
         removeFromList(uploadData)
         successfulFlashCard(uploadData)
+        document.cookie = "passkey=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        localStorage.removeItem("passkey")
         handleFiles([])
         return
     }
@@ -356,11 +358,20 @@ formSubmit.addEventListener("click", async (e) => {
 
 async function passKeyCheck(uploadData,fn,file)
 {
+   
     try {
         let returnedValue = await fn(file)
         if(returnedValue.passKeyFailed)
         {
-            throw new Error(returnedValue.error.message)
+            let banned = passkeyFail()
+            if(banned)
+            {
+                throw new Error(banned)
+            }
+            else
+            {
+                throw new Error(returnedValue.error.message)
+            }
         }
         uploadData.push(returnedValue)
         return uploadData
@@ -372,7 +383,6 @@ async function passKeyCheck(uploadData,fn,file)
 
 function errorFlashCard(obj)
 {
-    console.log(obj)
         if(obj.nofiles == true)
         {
             notifyErrorText.textContent = `${obj.message}`
@@ -470,13 +480,13 @@ errorbg.addEventListener("click", (e) => {
 async function smallUpload(smallFile)
 {
     let formData = new FormData();
-    formData.append("passkey",passkey.value)
+    formData.append("passkey",passkey.value.trim())
     formData.append("file", smallFile);
     formData.append("id", id)
     let passKeyFailed = false
     
     try {
-        let res = await fetch("/smalluploads3",{ method: "POST",body: formData, headers: {Authorization: `Bearer ${passkey.value}`}})
+        let res = await fetch("/smalluploads3",{ method: "POST",body: formData, headers: {Authorization: `Bearer ${passkey.value.trim()}`}})
         if(res.ok)
         {
             return {data: smallFile.name, success: true}
@@ -559,7 +569,7 @@ async function startMultipartUpload(largeFile, passKeyFailed)
 {
     const returnObj = {}
     try {
-        let startres = await fetch("/startMultipartUpload",{ method: "POST",body: JSON.stringify({name:`${largeFile.name}`, size:largeFile.size,id:id}), headers: {Authorization: `Bearer ${passkey.value}`, "Content-Type": "application/json"}})
+        let startres = await fetch("/startMultipartUpload",{ method: "POST",body: JSON.stringify({name:`${largeFile.name}`, size:largeFile.size,id:id}), headers: {Authorization: `Bearer ${passkey.value.trim()}`, "Content-Type": "application/json"}})
         if(startres.ok)
         {
             let {uploadId: id} = await startres.json()
@@ -579,7 +589,6 @@ async function startMultipartUpload(largeFile, passKeyFailed)
             throw new Error(error.message)
         }    
     } catch (error) {
-        console.log(error)
         returnObj.error = error
         returnObj.passKeyFailed = true
         returnObj.errorObj = {data: largeFile.name, success: false, error: error, passKeyFailed: passKeyFailed}
@@ -603,7 +612,7 @@ async function partsMultipartUpload(largeFile, uploadId, passKeyFailed)
         formData.append("uploadId", uploadId)
         formData.append("id", id)
         try {
-            let res = await fetch("/uploadpartss3",{ method: "POST",body: formData, headers: {Authorization: `Bearer ${passkey.value}`}})
+            let res = await fetch("/uploadpartss3",{ method: "POST",body: formData, headers: {Authorization: `Bearer ${passkey.value.trim()}`}})
             if(res.ok)
             {
                 let data = await res.json();
@@ -644,7 +653,7 @@ async function finishMultipartUpload(largeFile,uploadId,chunkData, passKeyFailed
     chunkData.ETag.forEach(e => formData.append("ETag", e))
     chunkData.PartNumber.forEach(p => formData.append("PartNumber", p))
     try {
-        let endres = await fetch("/finishMultipartUpload",{ method: "POST",body: formData, headers: {Authorization: `Bearer ${passkey.value}`}})
+        let endres = await fetch("/finishMultipartUpload",{ method: "POST",body: formData, headers: {Authorization: `Bearer ${passkey.value.trim()}`}})
         if(endres.ok)
         {
            await endres.json()
@@ -678,7 +687,7 @@ async function abortMultiPartUpload(uploadId, key)
     formData.append("id",id)
     formData.append("uploadId", uploadId)
     try {
-        let res = await fetch("/abortMultipartUpload",{ method: "POST",body: formData, headers: {Authorization: `Bearer ${passkey.value}`}})
+        let res = await fetch("/abortMultipartUpload",{ method: "POST",body: formData, headers: {Authorization: `Bearer ${passkey.value.trim()}`}})
         if(res.ok)
         {
             await endres.json()
@@ -708,12 +717,120 @@ async function getID() {
 
 getID()
 
-
-
-async function test()
+function checkIfBanned()
 {
-        const res = await fetch("/db");
-        const data = await res.json();
+    let ban = null;
+    ban = localStorage.getItem('ban');
+    //check ban date compare to date now
+    if(ban){
+        let now = new Date(Number(ban))
+        return `${now.getHours()}:${now.getMinutes()}`
+    }
+    ban = getCookie('ban')
+    if(ban){
+        let now = new Date(Number(ban))
+        return `${now.getHours()}:${now.getMinutes()}`
+    }
 }
 
-//test()
+function banChecker(data)
+{
+    let count = Number(data[1]) + 1
+    if(count < 10)
+    {
+        return null
+    }
+    if(count >= 20)
+    {
+        setCookieItem("ban",`${Date.now() + 3600000}`,3600)
+        localStorage.setItem('ban', `${Date.now() + 3600000}`);
+        localStorageTimer(3600000)
+        var now = new Date(Date.now() + 3600000);
+        return `${now.getHours()}:${now.getMinutes()}`
+    }
+    if(count == 15)
+    {
+        setCookieItem("ban",`${Date.now() + 600000}`,600)
+        localStorage.setItem('ban', `${Date.now() + 600000}`);
+        localStorageTimer(600000)
+        var now = new Date(Date.now() + 600000);
+        return `${now.getHours()}:${now.getMinutes()}`
+    }
+    if(count == 10)
+    {
+        setCookieItem("ban",`${Date.now() + 120000}`,120)
+        localStorage.setItem('ban', `${Date.now() + 120000}`);
+        localStorageTimer(120000)
+        var now = new Date(Date.now() + 120000);
+        return `${now.getHours()}:${now.getMinutes()}`
+    }
+}
+
+function passkeyFail()
+{
+     // If key successful remove keypass value
+    
+    let pks = null
+    pks = localStorage.getItem('passkey');
+    if(!pks)
+    {
+        pks = getCookie('passkey')
+    }
+    if(pks)
+    {
+        let a = pks.split("-")
+        let banned = banChecker(a)
+        if(!banned)
+        {
+            if(a[0] !== id)
+            {
+                a[0] = id
+            }
+            a[1] = Number(a[1]) + 1
+            setCookieItem("passkey",`${a[0]}-${a[1]}`,604800)
+            localStorage.setItem('passkey', `${a[0]}-${a[1]}`);
+            return null
+        }
+        else
+        {
+            a[1] = Number(a[1]) + 1
+            setCookieItem("passkey",`${a[0]}-${a[1]}`,604800)
+            localStorage.setItem('passkey', `${a[0]}-${a[1]}`);
+            return `Try again at ${banned}`
+        }
+    }
+    localStorage.setItem('passkey', `${id}-1`);
+    setCookieItem("passkey",`${id}-1`,604800)
+    return null
+}
+
+
+
+function getCookie(name) {
+
+            const nameEQ = name + "=";
+            const ca = document.cookie.split(';');
+            for (let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+                if (c.indexOf(nameEQ) === 0) return decodeURIComponent(c.substring(nameEQ.length, c.length));
+            }
+            return null;
+        }
+
+
+function setCookieItem(key,value,time) {
+            document.cookie = `${key}=${value}; max-age=${time}; path=/; SameSite=Lax`;
+}
+
+
+function localStorageTimer(time)
+{
+    setTimeout(() => {
+        let ban = null
+        ban = localStorage.getItem('ban');
+        if(ban){
+            localStorage.removeItem('ban');
+        }
+    },time)
+}

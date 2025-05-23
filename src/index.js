@@ -22,7 +22,7 @@ app.use(express.static(__dirname + '/public'));
 app.use(express.json({}));
 app.use(express.urlencoded({ extended: true }));
 
-var whitelist = ["https://kirsty-and-niall.love"]
+var whitelist = ["https://kirsty-and-niall.love", "http://localhost:3000"]
 
 const  corsOptions = {
     origin: function (origin, callback){
@@ -61,7 +61,7 @@ app.post("/smalluploads3",cors(corsOptions), upload.single('file'), async (req, 
  
     try {
        console.log("/////////////////////////////////////////////// SMALL Started //////////////////////////////////////////////////////")
-       console.log(await checkDbSize())
+       await checkDbSize()
        let err = fileAndKeyValidator(req, "single")
        if(err)
        {
@@ -106,7 +106,7 @@ app.post("/smalluploads3",cors(corsOptions), upload.single('file'), async (req, 
 app.post("/startMultipartUpload",cors(corsOptions), async (req, res) => {
     try {
        console.log("/////////////////////////////////////////////// START MULTIPART //////////////////////////////////////////////////////")
-       console.log(await checkDbSize())
+       await checkDbSize()
        let err = fileAndKeyValidator(req, "multipartStart")
        if(err)
        {
@@ -135,7 +135,6 @@ app.post("/startMultipartUpload",cors(corsOptions), async (req, res) => {
         }
     } catch (error) {
         let returnErr = errorHandler(error) // need to sort out
-        console.log("should be key", error)
         res.status(error.status).json({error: error, message: error.message, passKeyFailed: error.passKeyFailed})
     }
 })
@@ -249,6 +248,7 @@ app.post("/abortMultipartUpload",cors(corsOptions), upload.single('file'), async
 
         let resa = await s3.send(command)
         if(resa['$metadata'].httpStatusCode === 204){
+            logger({status: 204, message:"MultipartUpload was aborted", id:req.body.id, file: req.body.name},"error")
             res.status(204).json({message: `MultipartUpload was aborted`, data: ""})
         }
         else
@@ -263,39 +263,7 @@ app.post("/abortMultipartUpload",cors(corsOptions), upload.single('file'), async
     }
 })
 
-app.post("/abortMultipartUpload",cors(corsOptions), upload.single('file'), async (req, res) => {
-    let token  = req.headers.authorization.slice(7,)
-    let acceptedPasskey = token == process.env.PASSKEY
-    if(acceptedPasskey)
-    {
-        console.log("/////////////////////////////////////////////// Aborting //////////////////////////////////////////////////////")
-        const bucketName = process.env.BUCKET_NAME
-        const params = {
-            Bucket: bucketName,
-            Key: req.body.name,
-            UploadId: req.body.uploadId,
-        }
-    
-        const command = new AbortMultipartUploadCommand(params);
 
-        let g = await s3.send(command)
-        res.status(200).json({message: `MultipartUpload was aborted`, data: ""})
-    }
-    else
-    {
-        res.status(401).json({error:"access was denied",message: "Passkey was incorrect, Please try again.", passKeyFailed: "true"})
-    }
-})
-
-
-////////////////////////////////////////////
-//                                        //
-//   Connected to DB and fetching data    //
-//                                        //
-////////////////////////////////////////////
-app.get("/db",async (req,res) => {
-
-})
 
 
 app.use((err,req,res,next) => {
