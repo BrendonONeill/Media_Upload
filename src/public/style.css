@@ -505,7 +505,7 @@ form {
 
 .error-list-container
 {
-    background-color: #6E967F;
+    background-color: #efefef;
     padding: 1rem;
     width: 90%;
     max-height: 80%;
@@ -533,13 +533,13 @@ form {
 .error-card
 {
     padding: 1rem;
-    background-color: whitesmoke;
+    border: 2px solid red;
+    background-color: #FBEFEB;
     border-radius: 5px;
-    border: 2px solid black;
     width: 100%;
 }
 
-.notify-hide {
+.notify-hide, .not-list{
     display: none;
 }
 

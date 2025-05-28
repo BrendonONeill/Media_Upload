@@ -22,7 +22,7 @@ app.use(express.static(__dirname + '/public'));
 app.use(express.json({}));
 app.use(express.urlencoded({ extended: true }));
 
-var whitelist = ["https://kirsty-and-niall.love", "http://localhost:3000"]
+var whitelist = ["https://kirsty-and-niall.love"]
 
 const  corsOptions = {
     origin: function (origin, callback){

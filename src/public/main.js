@@ -13,6 +13,7 @@ const notifyButton = document.querySelector(".notify-button")
 const errorcontainerButton = document.querySelector(".error-list-container-button")
 const notifyErrorButton = document.querySelector(".notify-error-button")
 const errorbg = document.querySelector(".error-bg")
+const errorList = document.querySelector(".error-list")
 const loadingBG = document.querySelector(".loading-bg");
 const addFilesButton = document.querySelector(".add-files-button")
 const loadingUpdating = document.querySelector(".loading-updater")
@@ -41,6 +42,7 @@ addFilesButton.addEventListener("click", () => fileBrowserInput.click())
 
 const handleFiles = ([...files] = []) =>
 {
+   
     for(let i = 0; i < files.length; i++)
     {
         
@@ -386,14 +388,18 @@ function errorFlashCard(obj)
         if(obj.nofiles == true)
         {
             notifyErrorText.textContent = `${obj.message}`
+            notifyErrorButton.classList.add("not-list")
         }
         else if(obj.wrongKey !== true)
         {
+            notifyErrorButton.classList.remove("not-list")
             let count = 0
             for(let i = 0; i < obj.length; i++)
             {
                 if(obj[i].success != true)
                 {
+                    let listItem = generateErrorCard(obj[i])
+                    errorList.append(listItem)
                     count++
                 }
             }
@@ -402,11 +408,24 @@ function errorFlashCard(obj)
         else
         {
             notifyErrorText.textContent = `${obj.message}`
+            notifyErrorButton.classList.add("not-list")
         }
         notifyError.classList.remove("notify-hide")
         loadingBG.classList.add("notify-hide");
         notifyError.style.background = "#FBEFEB"
         notifyError.style.border = "2px solid #FC5758"
+}
+
+function generateErrorCard(obj)
+{
+    let li = document.createElement("li")
+    li.innerHTML = `
+    <div class="error-card">
+                    <h3>${obj.error}</h3>
+                    <p>${obj.data}</p>
+    </div>
+    `
+    return li
 }
 
 function successfulFlashCard(obj)
@@ -499,7 +518,7 @@ async function smallUpload(smallFile)
                 passKeyFailed = true
                 throw new Error(error.message)
             } 
-            throw new Error("failed to upload file")
+            throw error.message
         }
     } catch (error) {
         return {data: smallFile.name, success: false, error: error, passKeyFailed: passKeyFailed}
@@ -767,9 +786,7 @@ function banChecker(data)
 }
 
 function passkeyFail()
-{
-     // If key successful remove keypass value
-    
+{   
     let pks = null
     pks = localStorage.getItem('passkey');
     if(!pks)
