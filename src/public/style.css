@@ -482,7 +482,7 @@ form {
     right: 0;
     bottom: 0;
     left: 0;
-    background-color: #000000b2;
+    background-color: #000000c6;
     z-index: 10;
 }
 
@@ -507,14 +507,28 @@ form {
 {
     background-color: #efefef;
     padding: 1rem;
+    border-radius: 5px;
     width: 90%;
     max-height: 80%;
     overflow-y: scroll;
 }
 
+.error-list-container-button
+{
+    border-radius: 5px;
+    border: 1px solid black;
+    cursor: pointer;
+    padding: 0.1rem 0.2rem;
+}
+
+.error-list-container-button:hover
+{
+    border: 1px solid #ff0000;
+}
+
 .error-header
 {
-    padding: 1rem;
+    padding: 1rem 0;
     display: flex;
     justify-content: flex-end;
     align-items: center;
@@ -523,6 +537,11 @@ form {
 .error-list-container ul
 {
     list-style-type: none;
+    display: flex;
+    gap: 0.5rem 0;
+    flex-flow: column;
+    justify-content: center;
+    align-items: flex-start;
 }
 
 .error-list-container li
@@ -532,11 +551,24 @@ form {
 
 .error-card
 {
+    display: flex;
+    flex-flow: column;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 0.4rem;
     padding: 1rem;
     border: 2px solid red;
     background-color: #FBEFEB;
     border-radius: 5px;
     width: 100%;
+    min-width: 100%;
+}
+
+.error-card h3
+{
+    border-bottom: 1px solid #ff0000;
+    width: 98%;
+    padding-block: 0.2rem;
 }
 
 .notify-hide, .not-list{
@@ -648,6 +680,10 @@ footer {
         border: 2px solid white;
     }
 
+    .error-list-container
+    {
+        width: 50%;
+    }
 
     
 

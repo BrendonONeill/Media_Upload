@@ -22,7 +22,7 @@ app.use(express.static(__dirname + '/public'));
 app.use(express.json({}));
 app.use(express.urlencoded({ extended: true }));
 
-var whitelist = ["https://kirsty-and-niall.love"]
+var whitelist = ["https://kirsty-and-niall.love", "http://localhost:3000"]
 
 const  corsOptions = {
     origin: function (origin, callback){
@@ -67,9 +67,7 @@ app.post("/smalluploads3",cors(corsOptions), upload.single('file'), async (req, 
        {
         throw err
        }
-
        const bucketName = process.env.BUCKET_NAME
-
        const params = {
             Bucket: bucketName,
             Key: `${req.body.id}-${req.file.originalname}`,
@@ -92,9 +90,9 @@ app.post("/smalluploads3",cors(corsOptions), upload.single('file'), async (req, 
         await updateDbSize(req.body.id,req.file.size,req.file.originalname)
         res.status(200).json({message: `File was successfully uploaded`});
     } catch (error) {
-        let returnErr = errorHandler(error) // need to sort out
+        let returnErr = errorHandler(error)
         logger({status: error.status, message:error.message, id:req.body.id, file: req.file.originalname},"error")
-        res.status(error.status).json({error: error, message: error.message, passKeyFailed: error.passKeyFailed})
+        res.status(returnErr.status).json(returnErr)
     }
 })
 
@@ -125,6 +123,7 @@ app.post("/startMultipartUpload",cors(corsOptions), async (req, res) => {
         const multipartUpload = await s3.send(command);
         if(multipartUpload['$metadata'].httpStatusCode === 200)
         {
+             logger({status: 200, message:"Multipart has started", id:req.body.id, file: key},"main")
             res.status(200).json({message: `Files were successfully uploaded`, data: "", uploadId: multipartUpload.UploadId})
         }
         else
@@ -134,8 +133,9 @@ app.post("/startMultipartUpload",cors(corsOptions), async (req, res) => {
             throw err
         }
     } catch (error) {
-        let returnErr = errorHandler(error) // need to sort out
-        res.status(error.status).json({error: error, message: error.message, passKeyFailed: error.passKeyFailed})
+        let returnErr = errorHandler(error)
+        logger({status: error.status, message:error.message, id:req.body.id, file: key},"error")
+        res.status(returnErr.status).json(returnErr)
     }
 })
 
@@ -179,8 +179,9 @@ app.post("/uploadpartss3",cors(corsOptions), upload.single('file'), async (req, 
             throw err
         }
     } catch (error) {
-        let returnErr = errorHandler(error) // need to sort out
-        res.status(error.status).json({error: error, message: error.message, passKeyFailed: error.passKeyFailed})
+        let returnErr = errorHandler(error)
+        logger({status: error.status, message:error.message, id:req.body.id, file: req.body.name},"error")
+        res.status(returnErr.status).json(returnErr)
     }
 })
 
@@ -212,6 +213,7 @@ app.post("/finishMultipartUpload",cors(corsOptions), upload.single('file'), asyn
         if(resa['$metadata'].httpStatusCode === 200)
         {
             await updateDbSize(req.body.id,req.body.size,req.body.name)
+            logger({status: 200, message:"Multipart has completed", id:req.body.id, file: req.body.name},"main")
             res.status(200).json({message: `Files were successfully uploaded`})
         }
         else
@@ -224,8 +226,9 @@ app.post("/finishMultipartUpload",cors(corsOptions), upload.single('file'), asyn
 
 
     } catch (error) {
-        let returnErr = errorHandler(error) // need to sort out
-        res.status(error.status).json({error: error, message: error.message, passKeyFailed: error.passKeyFailed})
+        let returnErr = errorHandler(error)
+        logger({status: error.status, message:error.message, id:req.body.id, file: req.body.name},"error")
+        res.status(returnErr.status).json(returnErr)
     }
 })
 
@@ -248,7 +251,7 @@ app.post("/abortMultipartUpload",cors(corsOptions), upload.single('file'), async
 
         let resa = await s3.send(command)
         if(resa['$metadata'].httpStatusCode === 204){
-            logger({status: 204, message:"MultipartUpload was aborted", id:req.body.id, file: req.body.name},"error")
+            logger({status: 204, message:"MultipartUpload was aborted", id:req.body.id, file: req.body.name},"main")
             res.status(204).json({message: `MultipartUpload was aborted`, data: ""})
         }
         else
@@ -258,8 +261,9 @@ app.post("/abortMultipartUpload",cors(corsOptions), upload.single('file'), async
             throw err
         }
     } catch (error) {
-        let returnErr = errorHandler(error) // need to sort out
-        res.status(error.status).json(error)
+        let returnErr = errorHandler(error)
+        logger({status: error.status, message:error.message, id:req.body.id, file: req.body.name},"error")
+        res.status(returnErr.status).json(returnErr)
     }
 })
 
