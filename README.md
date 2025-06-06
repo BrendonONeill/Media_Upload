@@ -94,6 +94,11 @@ async function partsMultipartUpload(largeFile, uploadId, passKeyFailed)
 - Logging
 - Database to cap storage limit.
 
+## Bugs to fix
+- UI is not right with some errors in the list of errors. 
+- Passkey failed and is not displaying correctly when going to the error list. 
+- Error list is not being changed on new errors being added to the list.
+
 
 ## Testing
 - Need to test everything to make sure it works after every new feature. 
