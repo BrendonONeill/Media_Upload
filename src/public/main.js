@@ -299,6 +299,7 @@ function filterMedia(data, media)
 
 // Form submit 
 formSubmit.addEventListener("click", async (e) => {
+    debugger
     e.preventDefault()
     if(media.length == 0)
     {
@@ -347,6 +348,7 @@ formSubmit.addEventListener("click", async (e) => {
         globalUploadData = uploadData
         removeFromList(uploadData)
         successfulFlashCard(uploadData)
+        console.log("I get called anyway")
         document.cookie = "passkey=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
         localStorage.removeItem("passkey")
         handleFiles([])
@@ -394,6 +396,7 @@ function errorFlashCard(obj)
         {
             notifyErrorButton.classList.remove("not-list")
             let count = 0
+            errorList.innerHTML= ""
             for(let i = 0; i < obj.length; i++)
             {
                 if(obj[i].success != true)

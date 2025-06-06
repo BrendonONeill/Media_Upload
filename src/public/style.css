@@ -547,6 +547,7 @@ form {
 .error-list-container li
 {
     margin-bottom: 5px;
+    width: 100%;
 }
 
 .error-card

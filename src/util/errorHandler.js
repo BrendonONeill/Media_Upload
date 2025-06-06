@@ -5,10 +5,10 @@ export default function errorHandler(error)
     {
         status = error.status
     }
-    let passkeyFailed = false
+    let passKeyFailed = false
     if(error.passKeyFailed)
     {
-        passkeyFailed = error.passKeyFailed
+        passKeyFailed = error.passKeyFailed
     }
-    return {error: error, message: error.message, passkeyFailed, status}
+    return {error: error, message: error.message, passKeyFailed, status}
 }
