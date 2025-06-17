@@ -419,6 +419,7 @@ form {
     flex-flow: column;
     align-items: flex-start;
     justify-content: center;
+    width: 60%;
     gap: 0.4rem;
     font-weight: bold;
     background-color: #6E967F;
@@ -428,7 +429,7 @@ form {
 
 .passkey {
     border-radius: 5px;
-    width: 40%;
+    width: 80%;
     height: 25px;
     padding: 0.4rem;
     background-color: white;
@@ -442,7 +443,7 @@ form {
     font-weight: bold;
     color: rgb(40, 40, 40);
     width: 120px;
-    align-self: center;
+    align-self: flex-start;
     border-radius: 5px;
     border: 2px solid transparent;
 }
@@ -608,17 +609,78 @@ footer {
     }
 }
 
+@media only screen and (min-width: 1200px)
+{
+     header,
+    .information {
+        padding-inline: 1rem;
+        width: 54%;
+        margin: auto;
+    }
+
+    .file-uploader {
+        width: 800px;
+    }
+
+    .file-upload-box {
+        min-height: 280px;
+    }
+
+    .add-files-button
+    {
+        width: 50%;
+    }
+
+    .file-item
+    {
+        height: 105px;
+        grid-template-rows: repeat(2, 45px);
+    }
+
+    .cancel-button
+    {
+        padding: 2px;
+        width: 35px;
+        height: 35px;
+    }
+
+    .passkey-label
+    {
+        width: 30%;
+    }
+
+    .passkey
+    {
+        width: 70%;
+    }
+
+    .upload
+    {
+        align-self: flex-start;
+    }
+}
+
 
 @media only screen and (min-width: 1800px) {
 
 
+    header,
+    .information {
+        padding-inline: 1rem;
+        width: 40%;
+        margin: auto;
+    }
+
+    .hero {
+    font-size: 4rem;
+    }
 
     .file-uploader {
         width: 1000px;
     }
 
     .file-upload-box {
-        min-height: 300px;
+        min-height: 350px;
     }
 
     .uploader-header {
@@ -666,12 +728,6 @@ footer {
         height: 35px;
     }
 
-
-    header,
-    .information {
-        width: 56%;
-        margin: auto;
-    }
 
     .progress-bar-container
     {
