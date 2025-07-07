@@ -89,15 +89,11 @@ async function partsMultipartUpload(largeFile, uploadId, passKeyFailed)
 ```
 
 ## Working on
-- Cleaner error message for users.
 - Retry upload (3 times)
-- Logging
-- Database to cap storage limit.
+- Make uploading UI have more information while loading.
+- Testing each file type
+- Testing each browser
 
-## Bugs to fix
-- UI is not right with some errors in the list of errors. 
-- Passkey failed and is not displaying correctly when going to the error list. 
-- Error list is not being changed on new errors being added to the list.
 
 
 ## Testing

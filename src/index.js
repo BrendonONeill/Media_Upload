@@ -61,7 +61,18 @@ app.post("/smalluploads3",cors(corsOptions), upload.single('file'), async (req, 
  
     try {
        console.log("/////////////////////////////////////////////// SMALL Started //////////////////////////////////////////////////////")
-       await checkDbSize()
+       let {dbErr, count}  = await checkDbSize()
+       if(dbErr)
+       {
+        throw dbErr
+       }
+       else
+       {
+        if(count > process.env.DB_LIMIT)
+        {
+            throw new Error("File storage is full, please try again later.");
+        }
+       }
        let err = fileAndKeyValidator(req, "single")
        if(err)
        {
@@ -85,13 +96,13 @@ app.post("/smalluploads3",cors(corsOptions), upload.single('file'), async (req, 
         {
             throw new Error("wasn't able to upload file")
         }
-        logger({status: 200, message:"File was successfully uploaded", id:req.body.id, file: req.file.originalname},"main")
+        logger({status: 200, message:"File was successfully uploaded", id:req.body.id, file: req.file.originalname},"main",null)
         console.log("/////////////////////////////////////////////// SMALL Uploaded //////////////////////////////////////////////////////")
         await updateDbSize(req.body.id,req.file.size,req.file.originalname)
         res.status(200).json({message: `File was successfully uploaded`});
     } catch (error) {
         let returnErr = errorHandler(error)
-        logger({status: error.status, message:error.message, id:req.body.id, file: req.file.originalname},"error")
+        logger({status: error.status, message:error.message, id:req.body.id, file: req.file.originalname},"error", "smalluploads3/index.js")
         res.status(returnErr.status).json(returnErr)
     }
 })
@@ -104,7 +115,18 @@ app.post("/smalluploads3",cors(corsOptions), upload.single('file'), async (req, 
 app.post("/startMultipartUpload",cors(corsOptions), async (req, res) => {
     try {
        console.log("/////////////////////////////////////////////// START MULTIPART //////////////////////////////////////////////////////")
-       await checkDbSize()
+       let {dbErr, count}  = await checkDbSize()
+       if(dbErr)
+       {
+        throw dbErr
+       }
+       else
+       {
+        if(count > process.env.DB_LIMIT)
+        {
+            throw new Error("File storage is full, please try again later.");
+        }
+       }
        let err = fileAndKeyValidator(req, "multipartStart")
        if(err)
        {
@@ -123,7 +145,7 @@ app.post("/startMultipartUpload",cors(corsOptions), async (req, res) => {
         const multipartUpload = await s3.send(command);
         if(multipartUpload['$metadata'].httpStatusCode === 200)
         {
-             logger({status: 200, message:"Multipart has started", id:req.body.id, file: key},"main")
+             logger({status: 200, message:"Multipart has started", id:req.body.id, file: key},"main",null)
             res.status(200).json({message: `Files were successfully uploaded`, data: "", uploadId: multipartUpload.UploadId})
         }
         else
@@ -134,7 +156,7 @@ app.post("/startMultipartUpload",cors(corsOptions), async (req, res) => {
         }
     } catch (error) {
         let returnErr = errorHandler(error)
-        logger({status: error.status, message:error.message, id:req.body.id, file: key},"error")
+        logger({status: error.status, message:error.message, id:req.body.id, file: key},"error", "startMultipartUpload/index.js")
         res.status(returnErr.status).json(returnErr)
     }
 })
@@ -180,7 +202,7 @@ app.post("/uploadpartss3",cors(corsOptions), upload.single('file'), async (req, 
         }
     } catch (error) {
         let returnErr = errorHandler(error)
-        logger({status: error.status, message:error.message, id:req.body.id, file: req.body.name},"error")
+        logger({status: error.status, message:error.message, id:req.body.id, file: req.body.name},"error","uploadpartss3/index.js")
         res.status(returnErr.status).json(returnErr)
     }
 })
@@ -213,7 +235,7 @@ app.post("/finishMultipartUpload",cors(corsOptions), upload.single('file'), asyn
         if(resa['$metadata'].httpStatusCode === 200)
         {
             await updateDbSize(req.body.id,req.body.size,req.body.name)
-            logger({status: 200, message:"Multipart has completed", id:req.body.id, file: req.body.name},"main")
+            logger({status: 200, message:"Multipart has completed", id:req.body.id, file: req.body.name},"main",null)
             res.status(200).json({message: `Files were successfully uploaded`})
         }
         else
@@ -227,7 +249,7 @@ app.post("/finishMultipartUpload",cors(corsOptions), upload.single('file'), asyn
 
     } catch (error) {
         let returnErr = errorHandler(error)
-        logger({status: error.status, message:error.message, id:req.body.id, file: req.body.name},"error")
+        logger({status: error.status, message:error.message, id:req.body.id, file: req.body.name},"error","finishedMultipartUpload/index.js")
         res.status(returnErr.status).json(returnErr)
     }
 })
@@ -251,7 +273,7 @@ app.post("/abortMultipartUpload",cors(corsOptions), upload.single('file'), async
 
         let resa = await s3.send(command)
         if(resa['$metadata'].httpStatusCode === 204){
-            logger({status: 204, message:"MultipartUpload was aborted", id:req.body.id, file: req.body.name},"main")
+            logger({status: 204, message:"MultipartUpload was aborted", id:req.body.id, file: req.body.name},"main",null)
             res.status(204).json({message: `MultipartUpload was aborted`, data: ""})
         }
         else
@@ -262,7 +284,7 @@ app.post("/abortMultipartUpload",cors(corsOptions), upload.single('file'), async
         }
     } catch (error) {
         let returnErr = errorHandler(error)
-        logger({status: error.status, message:error.message, id:req.body.id, file: req.body.name},"error")
+        logger({status: error.status, message:error.message, id:req.body.id, file: req.body.name},"error","abortMultipartUpload/index.js")
         res.status(returnErr.status).json(returnErr)
     }
 })

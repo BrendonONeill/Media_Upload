@@ -854,3 +854,16 @@ function localStorageTimer(time)
         }
     },time)
 }
+
+function pass()
+{
+     const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+    const pk = urlParams.get('pk');
+    if(pk)
+    {
+        passkey.value = pk
+    }
+}
+
+pass()
