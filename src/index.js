@@ -12,6 +12,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { s3 } from "./util/aws.js";
 import logger from './util/logging.js';
 import { checkDbSize, updateDbSize } from './util/db.js';
+import uploadFilesBackOff from './util/uploadRetries.js';
 
 
 
@@ -91,10 +92,13 @@ app.post("/smalluploads3",cors(corsOptions), upload.single('file'), async (req, 
         {
             throw new Error("wasn't able to get presigned url");
         }
-        let a = await fetch(url,{method: 'PUT', body: req.file.buffer, headers: { 'Content-Type':req.file.mimetype}})
+        let a = await uploadFilesBackOff(fetch(url,{method: 'PUT', body: req.file.buffer, headers: { 'Content-Type':req.file.mimetype}}))
         if(!a.ok)
         {
-            throw new Error("wasn't able to upload file")
+            let err =  new Error("wasn't able to upload file")
+            err.status = 400
+            err.passKeyFailed = false
+            throw err
         }
         logger({status: 200, message:"File was successfully uploaded", id:req.body.id, file: req.file.originalname},"main",null)
         console.log("/////////////////////////////////////////////// SMALL Uploaded //////////////////////////////////////////////////////")
@@ -188,7 +192,7 @@ app.post("/uploadpartss3",cors(corsOptions), upload.single('file'), async (req, 
             err.status = 503
             throw err
         }
-        let resa = await fetch(url,{method: 'PUT', body: req.file.buffer, headers: { 'Content-Type':req.file.mimetype}})
+        let resa = await uploadFilesBackOff(fetch(url,{method: 'PUT', body: req.file.buffer, headers: { 'Content-Type':req.file.mimetype}})) 
         if(resa.status === 200)
         {
             const Etag = resa.headers.get('ETag')
@@ -198,6 +202,7 @@ app.post("/uploadpartss3",cors(corsOptions), upload.single('file'), async (req, 
         {
             let err =  new Error("failed to upload");
             err.status = 400
+            err.passKeyFailed = false
             throw err
         }
     } catch (error) {
@@ -234,7 +239,7 @@ app.post("/finishMultipartUpload",cors(corsOptions), upload.single('file'), asyn
         let resa = await s3.send(command)
         if(resa['$metadata'].httpStatusCode === 200)
         {
-            await updateDbSize(req.body.id,req.body.size,req.body.name)
+            //await updateDbSize(req.body.id,req.body.size,req.body.name)
             logger({status: 200, message:"Multipart has completed", id:req.body.id, file: req.body.name},"main",null)
             res.status(200).json({message: `Files were successfully uploaded`})
         }
