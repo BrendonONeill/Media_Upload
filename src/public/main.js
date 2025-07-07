@@ -28,6 +28,8 @@ let listMemory = 0
 let mediaListMemory = 0
 let TempListMemory = 0
 
+let listMemoryUploads = 0
+
 // array of media
 let media = [];
 let tempMedia = []
@@ -299,7 +301,6 @@ function filterMedia(data, media)
 
 // Form submit 
 formSubmit.addEventListener("click", async (e) => {
-    debugger
     e.preventDefault()
     if(media.length == 0)
     {
@@ -499,6 +500,12 @@ errorbg.addEventListener("click", (e) => {
 })
 
 
+function  calculateUpload()
+{
+
+}
+
+
 async function smallUpload(smallFile)
 {
     let formData = new FormData();
@@ -553,17 +560,15 @@ try {
 
 
    returnObj = await partsMultipartUpload(largeFile, uploadId, passKeyFailed)
-
-   chunkData.ETag = returnObj.chunkData.ETag
-   chunkData.PartNumber = returnObj.chunkData.PartNumber
    passKeyFailed = returnObj.passKeyFailed
    error = returnObj.error
    errorObj = returnObj.errorObj
-   
    if(error)
    {
     throw error
    }
+   chunkData.ETag = returnObj.chunkData.ETag
+   chunkData.PartNumber = returnObj.chunkData.PartNumber
 
    returnObj = await finishMultipartUpload(largeFile,uploadId,chunkData,passKeyFailed)
 
@@ -635,6 +640,7 @@ async function partsMultipartUpload(largeFile, uploadId, passKeyFailed)
         formData.append("id", id)
         try {
             let res = await fetch("/uploadpartss3",{ method: "POST",body: formData, headers: {Authorization: `Bearer ${passkey.value.trim()}`}})
+            
             if(res.ok)
             {
                 let data = await res.json();
@@ -643,7 +649,7 @@ async function partsMultipartUpload(largeFile, uploadId, passKeyFailed)
             }
             else
             {
-                let error = await startres.json()
+                let error = await res.json()
                 if(error.passKeyFailed)
                 {
                     passKeyFailed = true

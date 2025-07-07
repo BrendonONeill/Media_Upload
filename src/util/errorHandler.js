@@ -1,5 +1,6 @@
 export default function errorHandler(error)
 {
+    console.log(error)
     let status = 404
     if(error.status)
     {
