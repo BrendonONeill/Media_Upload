@@ -1,8 +1,9 @@
 import fs from "fs"
-export default async function logger(data, type)
+export default async function logger(data, type, location)
 {
      let loginfo = generateLog(data)
-     let content = `[${loginfo.time}] |${loginfo.status}| [${loginfo.UserId}]-${loginfo.file} "${loginfo.message}" \n` 
+     let content = `[${loginfo.time}] |${loginfo.status}| [${loginfo.UserId}]-${loginfo.file} "${loginfo.message}" \n`
+     let errContent = `[${loginfo.time}] |${loginfo.status}| [${loginfo.UserId}]-${loginfo.file} "${loginfo.message} ${location}" \n` 
     if(type === "main")
     {
     
@@ -15,7 +16,7 @@ export default async function logger(data, type)
         });
         return
     }
-        await fs.appendFile('errorlog.txt', content, 'utf8', (err) => {
+        await fs.appendFile('errorlog.txt', errContent, 'utf8', (err) => {
         if (err) {
             console.error('Error writing file:', err);
             return;
