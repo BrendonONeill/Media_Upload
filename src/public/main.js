@@ -17,6 +17,11 @@ const errorList = document.querySelector(".error-list")
 const loadingBG = document.querySelector(".loading-bg");
 const addFilesButton = document.querySelector(".add-files-button")
 const loadingUpdating = document.querySelector(".loading-updater")
+const loadingPercentage = document.querySelector(".loading-percentage")
+
+const loadingbar = document.querySelector(".loading-bar")
+const loadingtext = document.querySelector(".loading-text")  
+
 const block = "/video.svg"
 const progressBar = document.querySelector(".progress-bar")
 const fileMemory = document.querySelector(".files-memory")
@@ -188,6 +193,19 @@ function nameCleanUp(name)
         return text
     }
 }
+
+function nameCleanUpLoading(name)
+{
+    if(name.length < 15)
+    {
+        return name
+    }
+    else
+    {
+        let text = name.slice(0,15) + '...'
+        return text
+    }
+}
 function fileSize(bytes)
 {
     if(bytes > 1048576)
@@ -301,6 +319,7 @@ function filterMedia(data, media)
 
 // Form submit 
 formSubmit.addEventListener("click", async (e) => {
+    calculateUpload()
     e.preventDefault()
     if(media.length == 0)
     {
@@ -315,7 +334,6 @@ formSubmit.addEventListener("click", async (e) => {
             errorFlashCard({message:`Try again at ${banned}`, wrongKey: true})
             return  
         }
-        loadingUpdating.textContent = `Uploading... ${0}/${media.length}`
         let uploadData = []
         loadingBG.classList.remove("notify-hide")
         notifyError.classList.add("notify-hide")
@@ -343,15 +361,14 @@ formSubmit.addEventListener("click", async (e) => {
               }
               uploadData = res
             }
-            progressBar.style.width = `${Math.round(((index+1)/media.length)*100)}%` 
-            loadingUpdating.textContent = `Uploading... ${index+1}/${media.length}`
+            
         }
         globalUploadData = uploadData
         removeFromList(uploadData)
         successfulFlashCard(uploadData)
-        console.log("I get called anyway")
         document.cookie = "passkey=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
         localStorage.removeItem("passkey")
+        listMemoryUploads = 0
         handleFiles([])
         return
     }
@@ -499,10 +516,32 @@ errorbg.addEventListener("click", (e) => {
     errorbg.classList.add("notify-hide")
 })
 
-
-function  calculateUpload()
+// --cal
+function  calculateUpload(file)
 {
-
+    let full = 700
+    if(file)
+    {
+        loadingUpdating.textContent = `${nameCleanUpLoading(file)}`
+    }
+    let percentage = Math.floor((listMemoryUploads/mediaListMemory)* 100)
+    let pixelpercentage = Math.floor(full - (7 * percentage))
+    console.log(pixelpercentage,"px")
+    loadingbar.setAttribute("stroke-dashoffset", `${pixelpercentage}px`);
+    if(percentage < 10)
+    {
+        loadingtext.setAttribute("x","80px")
+    }
+    else if(percentage > 10 && percentage < 100)
+    {
+        loadingtext.setAttribute("x","64px")
+    }
+    if(percentage == 100)
+    {
+        loadingtext.setAttribute("x","48px")
+    }
+    loadingtext.textContent = `${percentage}%`
+    
 }
 
 
@@ -515,9 +554,12 @@ async function smallUpload(smallFile)
     let passKeyFailed = false
     
     try {
+        calculateUpload(smallFile.name)
         let res = await fetch("/smalluploads3",{ method: "POST",body: formData, headers: {Authorization: `Bearer ${passkey.value.trim()}`}})
         if(res.ok)
-        {
+        {   
+            listMemoryUploads = listMemoryUploads + smallFile.size
+            calculateUpload(null)
             return {data: smallFile.name, success: true}
         }
         else
@@ -546,6 +588,7 @@ async function largeFileUpload(largeFile)
     }
     let uploadId = null
 try {
+   calculateUpload(largeFile.name)
    let returnObj = await startMultipartUpload(largeFile, passKeyFailed)
    uploadId = returnObj.uploadId
    passKeyFailed = returnObj.passKeyFailed
@@ -643,6 +686,8 @@ async function partsMultipartUpload(largeFile, uploadId, passKeyFailed)
             
             if(res.ok)
             {
+                listMemoryUploads = listMemoryUploads + chunk.size
+                calculateUpload(null)
                 let data = await res.json();
                 chunkData.ETag.push(data.Etag)
                 chunkData.PartNumber.push(index+1)
@@ -873,3 +918,4 @@ function pass()
 }
 
 pass()
+

@@ -66,12 +66,18 @@
    
     <div class="loading-bg notify-hide">
         <div class="loading">
-            <img src="/spinner.svg" height="120" width="120" alt="">
-            <p class="loading-updater">Uploading... 0/0</p>
-            <div class="progress-bar-container">
-                <div class="progress-bar"></div>
+            <p class="loading-header">Uploading</p>  
+            <svg width="243" height="243" viewBox="-30.375 -30.375 303.75 303.75" version="1.1" xmlns="http://www.w3.org/2000/svg" style="transform:rotate(-90deg)">
+                <circle r="111.5" cx="121.5" cy="121.5" fill="transparent" stroke="#B5B5B5" stroke-width="30"></circle>
+                <circle class="loading-bar" r="111.5" cx="121.5" cy="121.5" stroke="#364A3F" stroke-width="29" stroke-linecap="round" stroke-dashoffset="140px" fill="transparent" stroke-dasharray="700.22px"></circle>
+                <text class="loading-text" x="48px" y="148px" fill="#8DC1A5" font-size="62px" font-weight="bold" style="transform:rotate(90deg) translate(0px, -239px)">100%</text>
+            </svg>
+            <div class="loading-file">
+                <p class="loading-updater">test.png </p>
+                <div class="loading-img-container">
+                    <img src="spinner.svg" width="25" height="25" alt="">
+                </div>
             </div>
-            
         </div>
     </div>
     <div class="error-bg notify-hide"> 
