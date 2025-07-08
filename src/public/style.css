@@ -10,6 +10,11 @@
     box-sizing: border-box;
 }
 
+img
+{
+    width: 100%;
+}
+
 
 body {
     background-color: #efefef;
@@ -91,6 +96,7 @@ form {
 
 .uploader-header {
     display: grid;
+    height: 120px;
     grid-template-areas:
         "title . number"
         ". . ."
@@ -103,18 +109,19 @@ form {
 
 .add-files-button {
     background-color: #364A3F;
-    padding: 1rem;
     color: white;
+    grid-area: button;
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 0 0.8rem;
+    justify-content:space-evenly;
     border-radius: 5px;
-    grid-area: button;
-    width: 100%;
-    justify-self: end;
+    border: 2px solid #364A3F;
     cursor: pointer;
-    border: 2px solid transparent;
+}
+
+.add-files-button img
+{
+    flex-basis: 20%;
 }
 
 .add-files-button:hover {
@@ -454,7 +461,7 @@ form {
 }
 
 .loading {
-    width: 80%;
+    width: 100%;
     color: white;
     display: flex;
     align-items: center;
@@ -473,9 +480,17 @@ form {
     font-size: 1.6rem;
 }
 
+.loading-header
+{
+    background-color: #364A3F;
+    padding: 1rem;
+    font-size: 1.6rem;
+    border-radius: 5px;
+    border: 2px solid white;
+}
 .loading-bg,.error-bg {
     display: flex;
-    align-items: flex-start;
+    align-items:flex-start;
     justify-content: center;
     padding-top: 10rem;
     position: fixed;
@@ -485,6 +500,20 @@ form {
     left: 0;
     background-color: #000000c6;
     z-index: 10;
+}
+
+.loading-file
+{
+    display: flex;
+    justify-content: center;
+    height: 50px;
+    width: 100%;
+    column-gap: 0.5rem;
+}
+
+.loading-img-container
+{
+    padding-top: 0.3rem;
 }
 
 .progress-bar-container
@@ -607,6 +636,11 @@ footer {
     .passkey-label {
         width: 50%;
     }
+
+    .add-files-button {
+    width: 70%;
+    justify-self: flex-end;
+    }
 }
 
 @media only screen and (min-width: 1200px)
@@ -618,17 +652,26 @@ footer {
         margin: auto;
     }
 
+    .uploader-header {
+    height: 150px;
+    }
+
+     .add-files-button {
+    width: 50%;
+    justify-self: flex-end;
+    }
+
+    .file-list {
+    max-height: 500px;
+    min-height: 400px; 
+    }
+
     .file-uploader {
         width: 800px;
     }
 
     .file-upload-box {
         min-height: 280px;
-    }
-
-    .add-files-button
-    {
-        width: 50%;
     }
 
     .file-item
@@ -690,10 +733,7 @@ footer {
             "memory . button";
     }
 
-
-    .add-files-button {
-        width: 35%;
-    }
+   
 
     .file-name
     {
