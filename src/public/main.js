@@ -49,7 +49,6 @@ addFilesButton.addEventListener("click", () => fileBrowserInput.click())
 
 const handleFiles = ([...files] = []) =>
 {
-   
     for(let i = 0; i < files.length; i++)
     {
         
@@ -71,7 +70,7 @@ const handleFiles = ([...files] = []) =>
         }
         else
         {
-            errorFlashCard({message: "Please only add Images and videos."})
+            errorFlashCard({message: "Please only add Images and videos.",nofiles: true})
         }
     }
     if(media.length <= 0)
@@ -409,6 +408,9 @@ function errorFlashCard(obj)
         {
             notifyErrorText.textContent = `${obj.message}`
             notifyErrorButton.classList.add("not-list")
+            setTimeout(() => {
+                notifyError.classList.add("notify-hide")
+            }, 8000)
         }
         else if(obj.wrongKey !== true)
         {
@@ -526,19 +528,26 @@ function  calculateUpload(file)
     }
     let percentage = Math.floor((listMemoryUploads/mediaListMemory)* 100)
     let pixelpercentage = Math.floor(full - (7 * percentage))
-    console.log(pixelpercentage,"px")
     loadingbar.setAttribute("stroke-dashoffset", `${pixelpercentage}px`);
-    if(percentage < 10)
+    if(percentage == 0)
     {
         loadingtext.setAttribute("x","80px")
+        loadingbar.setAttribute("stroke","#B5B5B5")
+    }
+    if(percentage < 10 && percentage > 0)
+    {
+        loadingtext.setAttribute("x","80px")
+        loadingbar.setAttribute("stroke","#364A3F")
     }
     else if(percentage > 10 && percentage < 100)
     {
         loadingtext.setAttribute("x","64px")
+        loadingbar.setAttribute("stroke","#364A3F")
     }
     if(percentage == 100)
     {
         loadingtext.setAttribute("x","48px")
+        loadingbar.setAttribute("stroke","#364A3F")
     }
     loadingtext.textContent = `${percentage}%`
     

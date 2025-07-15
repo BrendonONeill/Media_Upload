@@ -23,7 +23,7 @@ app.use(express.static(__dirname + '/public'));
 app.use(express.json({}));
 app.use(express.urlencoded({ extended: true }));
 
-var whitelist = ["https://kirsty-and-niall.love", "http://localhost:3000"]
+var whitelist = ["https://kirsty-and-niall.love", "http://kirsty-and-niall.love"]
 
 const  corsOptions = {
     origin: function (origin, callback){
@@ -49,6 +49,10 @@ app.get("/", (req,res) => {
     res.sendFile(join(__dirname, 'index.html'));
 });
 
+app.get("/policy", (req,res) => { 
+    const __dirname = dirname(fileURLToPath(import.meta.url));
+    res.sendFile(join(__dirname, 'policy.html'));
+});
 
 app.get("/idgen", (req,res) => {
     let uuid = uuidv4()
@@ -149,7 +153,7 @@ app.post("/startMultipartUpload",cors(corsOptions), async (req, res) => {
         const multipartUpload = await s3.send(command);
         if(multipartUpload['$metadata'].httpStatusCode === 200)
         {
-             logger({status: 200, message:"Multipart has started", id:req.body.id, file: key},"main",null)
+             logger({status: 200, message:"Multipart has started", id:req.body.id, file: req.body.name},"main",null)
             res.status(200).json({message: `Files were successfully uploaded`, data: "", uploadId: multipartUpload.UploadId})
         }
         else
@@ -160,7 +164,7 @@ app.post("/startMultipartUpload",cors(corsOptions), async (req, res) => {
         }
     } catch (error) {
         let returnErr = errorHandler(error)
-        logger({status: error.status, message:error.message, id:req.body.id, file: key},"error", "startMultipartUpload/index.js")
+        logger({status: error.status, message:error.message, id:req.body.id, file: req.body.name},"error", "startMultipartUpload/index.js")
         res.status(returnErr.status).json(returnErr)
     }
 })
