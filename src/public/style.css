@@ -617,7 +617,7 @@ form {
 }
 
 footer {
-    padding: 1rem;
+    padding: 1.5rem;
     display: flex;
     align-items: center;
     justify-content:space-between;
@@ -658,6 +658,13 @@ footer a
     padding-bottom: 1rem;
 }
 
+@media only screen and (max-width: 400px) {
+    .upload,.passkey-label
+    {
+        margin-left: 1rem;
+    }
+}
+
 @media only screen and (min-width: 600px) {
     .file-uploader {
         width: 550px;
@@ -667,6 +674,8 @@ footer a
     header,
     .information {
         padding-inline: 3rem;
+        width: 80%;
+        margin: auto;
     }
 
     .passkey-label {
@@ -676,6 +685,13 @@ footer a
     .add-files-button {
     width: 70%;
     justify-self: flex-end;
+    }
+}
+
+@media only screen and (min-width: 900px) {
+    header,
+    .information {
+        width: 64%;
     }
 }
 
@@ -765,12 +781,16 @@ footer a
     header,
     .information {
         padding-inline: 1rem;
-        width: 40%;
+        width: 52%;
         margin: auto;
     }
 
     .hero {
     font-size: 4rem;
+    }
+
+    .add-files-button {
+        width: 40%;
     }
 
     .file-uploader {
@@ -807,7 +827,7 @@ footer a
     }
 
     .passkey-label {
-        width: 30%;
+        width: 25%;
     }
 
     .upload {

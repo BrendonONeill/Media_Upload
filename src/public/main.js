@@ -207,7 +207,12 @@ function nameCleanUpLoading(name)
 }
 function fileSize(bytes)
 {
-    if(bytes > 1048576)
+    if(bytes > 1073741824 )
+    {
+        let num = bytes/1073741824
+        return num.toFixed(2)  + "GB"
+    }
+    else if(bytes > 1048576)
     {
         let num = bytes/1048576
         return num.toFixed(2)  + "MB"
