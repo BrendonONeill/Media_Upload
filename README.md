@@ -88,11 +88,8 @@ async function partsMultipartUpload(largeFile, uploadId, passKeyFailed)
 }
 ```
 
-## Working on
-- Retry upload (3 times)
-- Make uploading UI have more information while loading.
-- Testing each file type
-- Testing each browser
+## Extra Features
+- Cancel Upload
 
 
 
